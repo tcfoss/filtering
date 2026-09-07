@@ -1,11 +1,11 @@
-# @tcf-oss/filtering-contracts
+# @tcfoss/filtering-contracts
 
 TypeScript mirror of the `TcfOss.Filtering.Contracts` wire models and constants.
 
 ## Install
 
 ```bash
-npm install @tcf-oss/filtering-contracts
+npm install @tcfoss/filtering-contracts
 ```
 
 Optional schema validation:
@@ -23,8 +23,8 @@ npm install zod
 ## Basic usage
 
 ```ts
-import { FilterOperators, SortDirections } from '@tcf-oss/filtering-contracts';
-import type { DataRequest } from '@tcf-oss/filtering-contracts';
+import { FilterOperators, SortDirections } from '@tcfoss/filtering-contracts';
+import type { DataRequest } from '@tcfoss/filtering-contracts';
 
 const request: DataRequest = {
   filter: { filterType: 'simple', field: 'name', operator: FilterOperators.Contains, value: 'smith' },
