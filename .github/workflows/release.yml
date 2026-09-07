@@ -146,7 +146,7 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@tcf-oss'
+          scope: '@tcfoss'
           # registry-url: 'https://registry.npmjs.org'  # npmjs.org alternative (Trusted Publishing)
 
       - name: Install
