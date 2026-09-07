@@ -1,0 +1,175 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  parse-version:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/') && github.base_ref == 'master'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+    steps:
+      - id: parse
+        run: |
+          branch="${{ github.head_ref }}"
+          if [[ "$branch" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Branch name '$branch' does not match release/vX.Y.Z[-suffix]"
+            exit 1
+          fi
+
+  tag:
+    needs: parse-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Tag release
+        run: |
+          version="v${{ needs.parse-version.outputs.version }}"
+          git tag -a "$version" -m "Release $version"
+          git push origin "$version"
+
+  publish-dotnet:
+    needs: tag
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Filtering.slnx
+
+      - name: Build
+        run: dotnet build Filtering.slnx --no-restore --configuration Release
+
+      - name: Pack
+        run: |
+          dotnet pack src/TcfOss.Filtering.Contracts/TcfOss.Filtering.Contracts.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.Contracts.Newtonsoft/TcfOss.Filtering.Contracts.Newtonsoft.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.Linq/TcfOss.Filtering.Linq.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.EntityFrameworkCore/TcfOss.Filtering.EntityFrameworkCore.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.AspNetCore/TcfOss.Filtering.AspNetCore.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.CsvOutput/TcfOss.Filtering.CsvOutput.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.XlsxOutput/TcfOss.Filtering.XlsxOutput.csproj \
+            --no-build --configuration Release --output ./nupkg
+          dotnet pack src/TcfOss.Filtering.Programmatic/TcfOss.Filtering.Programmatic.csproj \
+            --no-build --configuration Release --output ./nupkg
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source "https://nuget.pkg.github.com/tcfoss/index.json" \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
+
+      - name: NuGet login (OIDC -> temp API key)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: tcflanagan
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source "https://api.nuget.org/v3/index.json" \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
+            --skip-duplicate
+
+  publish-npm:
+    needs: [parse-version, tag]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    defaults:
+      run:
+        working-directory: npm/tcfoss-filtering-contracts
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@tcfoss'
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Stamp version
+        run: npm version "${{ needs.parse-version.outputs.version }}" --no-git-tag-version
+
+      - name: Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  finalize-release:
+    needs: [parse-version, publish-dotnet, publish-npm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Resolve release
+        uses: ./.github/actions/issuetracker
+        with:
+          command: resolve
+          api-url: ${{ vars.ISSUETRACKER_API_URL }}
+          version: ${{ needs.parse-version.outputs.version }}
+          token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
+          release-url: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.parse-version.outputs.version }}
+
+      - name: Release notes
+        id: notes
+        uses: ./.github/actions/issuetracker
+        with:
+          command: notes
+          api-url: ${{ vars.ISSUETRACKER_API_URL }}
+          version: ${{ needs.parse-version.outputs.version }}
+          token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
+          release-url: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.parse-version.outputs.version }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.parse-version.outputs.version }}
+          body_path: ${{ steps.notes.outputs.notes-file }}

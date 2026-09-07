@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TcfOss.Filtering.Contracts/TcfOss.Filtering.Contracts.csproj" />
+    <Project Path="src/TcfOss.Filtering.EntityFrameworkCore/TcfOss.Filtering.EntityFrameworkCore.csproj" />
+    <Project Path="src/TcfOss.Filtering.Linq/TcfOss.Filtering.Linq.csproj" />
+    <Project Path="src/TcfOss.Filtering.AspNetCore/TcfOss.Filtering.AspNetCore.csproj" />
+    <Project Path="src/TcfOss.Filtering.Contracts.Newtonsoft/TcfOss.Filtering.Contracts.Newtonsoft.csproj" />
+    <Project Path="src/TcfOss.Filtering.XlsxOutput/TcfOss.Filtering.XlsxOutput.csproj" />
+    <Project Path="src/TcfOss.Filtering.CsvOutput/TcfOss.Filtering.CsvOutput.csproj" />
+    <Project Path="src/TcfOss.Filtering.Programmatic/TcfOss.Filtering.Programmatic.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/TcfOss.Filtering.Linq.Tests/TcfOss.Filtering.Linq.Tests.csproj" />
+    <Project Path="test/TcfOss.Filtering.Programmatic.Tests/TcfOss.Filtering.Programmatic.Tests.csproj" />
+    <Project Path="test/TcfOss.Filtering.Linq.IntegrationTests/TcfOss.Filtering.Linq.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/demo/">
+    <Project Path="demo/backend/Demo.Api.csproj" />
+  </Folder>
+  <Folder Name="/benchmark/">
+    <Project Path="benchmark/TcfOss.Filtering.Benchmarks/TcfOss.Filtering.Benchmarks.csproj" />
+  </Folder>
+</Solution>

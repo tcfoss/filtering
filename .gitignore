@@ -1,0 +1,15 @@
+bin/
+obj/
+nupkg/
+
+.vscode/
+*.lscache
+
+node_modules/
+dist/
+.vite/
+
+[Tt]est-[Rr]esult*/
+[Cc]overage-[Hh]istory/
+
+BenchmarkDotNet.Artifacts/

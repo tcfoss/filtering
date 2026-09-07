@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TcfOss.Filtering.Linq\TcfOss.Filtering.Linq.csproj" />
+  </ItemGroup>
+
+</Project>

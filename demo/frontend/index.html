@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TcfOss.Filtering Demo</title>
+    <style>
+      body { font-family: sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.4rem; }
+      h2 { font-size: 1.1rem; margin-top: 2rem; }
+      .controls-row { display: flex; gap: 1.5rem; align-items: flex-start; margin-bottom: 1rem; }
+      .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; flex: 1; }
+      .controls label, .dept-label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.85rem; }
+      .controls input, .controls select, .dept-label select { padding: 0.3rem 0.5rem; font-size: 0.9rem; }
+      button { padding: 0.35rem 0.9rem; cursor: pointer; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+      th, td { border: 1px solid #ccc; padding: 0.4rem 0.7rem; text-align: left; }
+      th { background: #f0f0f0; }
+      .pagination { margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center; }
+      pre { background: #f6f6f6; padding: 1rem; font-size: 0.8rem; overflow: auto; }
+      .section { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <h1>TcfOss.Filtering Demo</h1>
+
+    <!-- Standard (typed) request -->
+    <div class="section">
+      <h2>Standard request — <code>POST /employees</code></h2>
+      <p style="font-size:0.85rem;color:#555">Whitelist: <code>Department.*</code> — direct children only. Filtering on <code>Department.Name</code> works; <code>Department.Office.City</code> would be blocked.</p>
+      <p>Note that the demo project queries an in-memory collection, not a real database, so string comparisons are case-sensitive.</p>
+      <div class="controls-row">
+        <div class="controls">
+          <label>Name contains
+            <input id="nameFilter" type="text" placeholder="e.g. Smith" />
+          </label>
+          <label>Min salary
+            <input id="minSalary" type="number" placeholder="e.g. 60000" style="width:8rem" />
+          </label>
+          <label>Max salary
+            <input id="maxSalary" type="number" placeholder="e.g. 100000" style="width:8rem" />
+          </label>
+          <label>Active only
+            <input id="activeOnly" type="checkbox" />
+          </label>
+          <label>Sort by
+            <select id="sortField">
+              <option value="Name">Name</option>
+              <option value="Salary">Salary</option>
+              <option value="HireDate">HireDate</option>
+            </select>
+          </label>
+          <label>Direction
+            <select id="sortDir">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </label>
+          <label>Page size
+            <select id="pageSize">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+            </select>
+          </label>
+          <button id="searchBtn">Search</button>
+        </div>
+        <label class="dept-label">Department(s) <small style="color:#888">(ctrl/cmd+click for multiple)</small>
+          <select id="deptFilter" multiple size="5">
+            <option>Engineering</option>
+            <option>Marketing</option>
+            <option>Finance</option>
+            <option>HR</option>
+            <option>Sales</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="result"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Dynamic (field-selection) request -->
+    <div class="section">
+      <h2>Dynamic request — <code>POST /employees/dynamic</code></h2>
+      <p style="font-size:0.85rem;color:#555">Whitelist: <code>Department.**</code> — all descendants. Both <code>Department.Name</code> and <code>Department.Office.City</code> are permitted.</p>
+      <p style="font-size:0.85rem;color:#555">Blacklist: <code>Department.Office.SecretId</code> — takes precedence over whitelist.</p>
+      <div class="controls">
+        <label>Requested fields (comma-separated)
+          <input id="dynFields" type="text" value="Name,Department.Name,Department.Office.City,Salary" style="width:26rem" />
+        </label>
+        <label>Department name
+          <select id="dynDept">
+            <option value="">Any</option>
+            <option>Engineering</option>
+            <option>Marketing</option>
+            <option>Finance</option>
+            <option>HR</option>
+            <option>Sales</option>
+          </select>
+        </label>
+        <label>Office city contains
+          <input id="dynCity" type="text" placeholder="e.g. London" />
+        </label>
+        <button id="dynSearchBtn">Search</button>
+      </div>
+
+      <div id="dynResult"></div>
+    </div>
+
+    <!-- Request / response inspector -->
+    <div class="section">
+      <h2>Last request / response</h2>
+      <pre id="inspector">—</pre>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
