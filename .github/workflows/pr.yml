@@ -74,7 +74,7 @@ jobs:
         with:
           command: validate
           api-url: ${{ vars.ISSUETRACKER_API_URL }}
-          version: ${{ steps.release.outputs.version }}
+          version: ${{ steps.parse-release.outputs.version }}
           token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
 
       - name: Install reportgenerator
