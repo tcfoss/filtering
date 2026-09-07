@@ -3,16 +3,30 @@ name: Release
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to (re-)release, e.g. 1.0.0. Required for manual runs.'
+        required: true
+      force-retag:
+        description: 'Delete and recreate the tag if it already exists'
+        type: boolean
+        default: false
 
 jobs:
   parse-version:
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/') && github.base_ref == 'master'
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/') && github.base_ref == 'master')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.parse.outputs.version }}
     steps:
       - id: parse
         run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           branch="${{ github.head_ref }}"
           if [[ "$branch" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?)$ ]]; then
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
@@ -39,6 +53,10 @@ jobs:
       - name: Tag release
         run: |
           version="v${{ needs.parse-version.outputs.version }}"
+          if [[ "${{ inputs.force-retag }}" == "true" ]]; then
+            git push origin ":refs/tags/$version" || true
+            git tag -d "$version" 2>/dev/null || true
+          fi
           git tag -a "$version" -m "Release $version"
           git push origin "$version"
 
@@ -111,6 +129,7 @@ jobs:
     needs: [parse-version, tag]
     runs-on: ubuntu-latest
     permissions:
+      # id-token: write  # needed if switching back to npmjs.org Trusted Publishing (OIDC)
       packages: write
       contents: read
 
@@ -127,7 +146,8 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@tcfoss'
+          scope: '@tcf-oss'
+          # registry-url: 'https://registry.npmjs.org'  # npmjs.org alternative (Trusted Publishing)
 
       - name: Install
         run: npm ci
@@ -145,6 +165,9 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Trusted Publishing (OIDC) alternative for npmjs.org - no token needed:
+      # - name: Publish
+      #   run: npm publish --access public
 
   finalize-release:
     needs: [parse-version, publish-dotnet, publish-npm]
