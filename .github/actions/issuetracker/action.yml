@@ -37,6 +37,12 @@ runs:
           validate)
             http=$(curl -sS "${auth[@]}" -H "Accept: application/json" \
               -o validation.json -w '%{http_code}' "$base/validation")
+            # 200 = valid, 422 = validation failed (both return a ReleaseValidationSummary body); anything else is unexpected (e.g. 401/404).
+            if [[ "$http" != "200" && "$http" != "422" ]]; then
+              echo "::error::IssueTracker validation request failed with HTTP $http"
+              cat validation.json
+              exit 1
+            fi
             valid=$(jq -r '.isValid' validation.json)
             echo "is_valid=$valid" >> "$GITHUB_OUTPUT"
             if [[ "$valid" != "true" ]]; then
