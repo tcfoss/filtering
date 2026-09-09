@@ -5,32 +5,40 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
 
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
         with:
-          fetch-depth: 0
+          dotnet-version: '10.0.x'
 
-      - name: Fetch tags
-        run: git fetch --tags --force
+      - name: Restore
+        run: dotnet restore Filtering.slnx
 
-      # Only release/vX.Y.Z[-suffix] branches trigger the release-specific steps below.
-      - name: Parse release version
-        id: parse-release
-        if: startsWith(github.head_ref, 'release/')
-        run: |
-          branch="${{ github.head_ref }}"
-          if [[ "$branch" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?)$ ]]; then
-            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::Branch name '$branch' does not match release/vX.Y.Z[-suffix]"
-            exit 1
-          fi
+      - name: Lint
+        run: dotnet format Filtering.slnx --verify-no-changes --severity info --no-restore
+
+  unit-tests:
+    name: Test (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: LINQ
+            project: test/TcfOss.Filtering.Linq.Tests/TcfOss.Filtering.Linq.Tests.csproj
+          - name: Programmatic
+            project: test/TcfOss.Filtering.Programmatic.Tests/TcfOss.Filtering.Programmatic.Tests.csproj
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -42,40 +50,101 @@ jobs:
       - name: Build
         run: dotnet build Filtering.slnx --no-restore --configuration Release
 
-      - name: Lint
-        run: dotnet format Filtering.slnx --verify-no-changes --severity info
-
       - name: Test
         run: |
-          dotnet test test/TcfOss.Filtering.Linq.Tests/TcfOss.Filtering.Linq.Tests.csproj \
+          dotnet test "${{ matrix.project }}" \
             --no-build \
             --configuration Release \
             --settings coverage.runsettings \
             --collect "XPlat Code Coverage" \
             --results-directory TestResults
 
-          dotnet test test/TcfOss.Filtering.Programmatic.Tests/TcfOss.Filtering.Programmatic.Tests.csproj \
-            --no-build \
-            --configuration Release \
-            --settings coverage.runsettings \
-            --collect "XPlat Code Coverage" \
-            --results-directory TestResults
+      - name: Upload test results
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.name }}
+          path: TestResults/
+
+  integration-test:
+    if: startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Filtering.slnx
+
+      - name: Build
+        run: dotnet build Filtering.slnx --no-restore --configuration Release
 
       - name: Integration test
-        if: steps.parse-release.outputs.version != ''
         run: |
           dotnet test test/TcfOss.Filtering.Linq.IntegrationTests/TcfOss.Filtering.Linq.IntegrationTests.csproj \
             --no-build \
             --configuration Release
 
+  validate-release:
+    if: startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Parse release version
+        id: parse-release
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [[ "$BRANCH" =~ ^release/v([0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Branch name '$BRANCH' does not match release/vX.Y.Z[-suffix]"
+            exit 1
+          fi
+
       - name: Validate release
-        if: steps.parse-release.outputs.version != ''
-        uses: ./.github/actions/issuetracker
+        uses: tcfoss/github-actions/.github/actions/issuetracker@v1
         with:
           command: validate
           api-url: ${{ vars.ISSUETRACKER_API_URL }}
           version: ${{ steps.parse-release.outputs.version }}
           token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
+
+  coverage:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download test results
+        uses: actions/download-artifact@v7
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+          path: TestResults
 
       - name: Install reportgenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool

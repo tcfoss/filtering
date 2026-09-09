@@ -12,6 +12,6 @@ Add the converter to `JsonSerializerSettings` when using Newtonsoft.Json for req
 
 ## Related docs
 
-- [../../docs/UtilityExtensionPackages.md](../../docs/UtilityExtensionPackages.md)
-- [../TcfOss.Filtering.Contracts/README.md](../TcfOss.Filtering.Contracts/README.md)
-- [../../README.md](../../README.md)
+- [Utility extension packages](https://github.com/tcfoss/filtering/blob/master/docs/UtilityExtensionPackages.md)
+- [TcfOss.Filtering.Contracts](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Contracts/README.md)
+- [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

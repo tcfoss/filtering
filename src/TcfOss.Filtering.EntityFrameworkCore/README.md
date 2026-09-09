@@ -24,6 +24,6 @@ Contracts.DataResult<Employee> result = await dbContext.Employees
 
 ## Related packages
 
-- [../TcfOss.Filtering.Linq/README.md](../TcfOss.Filtering.Linq/README.md)
-- [../../docs/UtilityExtensionPackages.md](../../docs/UtilityExtensionPackages.md)
-- [../../README.md](../../README.md)
+- [TcfOss.Filtering.Linq](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Linq/README.md)
+- [Utility extension packages](https://github.com/tcfoss/filtering/blob/master/docs/UtilityExtensionPackages.md)
+- [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)
