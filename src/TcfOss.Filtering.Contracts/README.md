@@ -24,6 +24,6 @@ var request = new DataRequest
 
 ## Related packages
 
-- [../TcfOss.Filtering.Linq/README.md](../TcfOss.Filtering.Linq/README.md)
-- [../../docs/ContractKeys.md](../../docs/ContractKeys.md)
-- [../../README.md](../../README.md)
+- [TcfOss.Filtering.Linq](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Linq/README.md)
+- [Contract keys](https://github.com/tcfoss/filtering/blob/master/docs/ContractKeys.md)
+- [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

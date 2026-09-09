@@ -2,13 +2,13 @@ import {
   FilterOperators,
   SortDirections,
   LogicalOperators,
-} from '@tcflanagan/filtering-contracts';
+} from '@tcfoss/filtering-contracts';
 import type {
   DataRequest,
   DynamicDataRequest,
   DataResult,
   Filter,
-} from '@tcflanagan/filtering-contracts';
+} from '@tcfoss/filtering-contracts';
 
 const API = 'http://localhost:5050';
 
@@ -55,29 +55,29 @@ async function search(page = 1) {
   const filters: Filter[] = [];
 
   if (nameVal) {
-    filters.push({ type: 'simple', field: 'Name', operator: FilterOperators.Contains, value: nameVal });
+    filters.push({ filterType: 'simple', field: 'Name', operator: FilterOperators.Contains, value: nameVal });
   }
   if (selectedDepts.length === 1) {
-    filters.push({ type: 'simple', field: 'Department.Name', operator: FilterOperators.EqualTo, value: selectedDepts[0] });
+    filters.push({ filterType: 'simple', field: 'Department.Name', operator: FilterOperators.EqualTo, value: selectedDepts[0] });
   } else if (selectedDepts.length > 1) {
-    filters.push({ type: 'set', field: 'Department.Name', values: selectedDepts, negated: false });
+    filters.push({ filterType: 'set', field: 'Department.Name', values: selectedDepts, negated: false });
   }
   if (minSalaryVal && maxSalaryVal) {
-    filters.push({ type: 'range', field: 'Salary', valueFrom: minSalaryVal, valueTo: maxSalaryVal });
+    filters.push({ filterType: 'range', field: 'Salary', valueFrom: minSalaryVal, valueTo: maxSalaryVal });
   } else if (minSalaryVal) {
-    filters.push({ type: 'simple', field: 'Salary', operator: FilterOperators.GreaterThanOrEqualTo, value: minSalaryVal });
+    filters.push({ filterType: 'simple', field: 'Salary', operator: FilterOperators.GreaterThanOrEqualTo, value: minSalaryVal });
   } else if (maxSalaryVal) {
-    filters.push({ type: 'simple', field: 'Salary', operator: FilterOperators.LessThanOrEqualTo, value: maxSalaryVal });
+    filters.push({ filterType: 'simple', field: 'Salary', operator: FilterOperators.LessThanOrEqualTo, value: maxSalaryVal });
   }
   if (activeOnly) {
-    filters.push({ type: 'simple', field: 'IsActive', operator: FilterOperators.EqualTo, value: 'true' });
+    filters.push({ filterType: 'simple', field: 'IsActive', operator: FilterOperators.EqualTo, value: 'true' });
   }
 
   const request: DataRequest = {
     filter: filters.length === 1
       ? filters[0]
       : filters.length > 1
-        ? { type: 'composite', logicalOperator: LogicalOperators.And, filters }
+        ? { filterType: 'composite', logicalOperator: LogicalOperators.And, filters }
         : undefined,
     sorts: [{ field: sortField, direction: sortDir === 'asc' ? SortDirections.Ascending : SortDirections.Descending }],
     page,
@@ -122,10 +122,10 @@ async function dynamicSearch() {
 
   const filters: Filter[] = [];
   if (deptVal) {
-    filters.push({ type: 'simple', field: 'Department.Name', operator: FilterOperators.EqualTo, value: deptVal });
+    filters.push({ filterType: 'simple', field: 'Department.Name', operator: FilterOperators.EqualTo, value: deptVal });
   }
   if (cityVal) {
-    filters.push({ type: 'simple', field: 'Department.Office.City', operator: FilterOperators.Contains, value: cityVal });
+    filters.push({ filterType: 'simple', field: 'Department.Office.City', operator: FilterOperators.Contains, value: cityVal });
   }
 
   const request: DynamicDataRequest = {
@@ -133,7 +133,7 @@ async function dynamicSearch() {
     filter: filters.length === 1
       ? filters[0]
       : filters.length > 1
-        ? { type: 'composite', logicalOperator: LogicalOperators.And, filters }
+        ? { filterType: 'composite', logicalOperator: LogicalOperators.And, filters }
         : undefined,
     sorts: [{ field: 'Name', direction: SortDirections.Ascending }],
     page: 1,

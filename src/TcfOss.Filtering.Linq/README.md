@@ -26,7 +26,7 @@ When handling untrusted input, map via a mapper (`ReflectionFilterMapper<T>`, `D
 
 ## Related docs
 
-- [../../docs/RequestMapping.md](../../docs/RequestMapping.md)
-- [../../docs/ContractKeys.md](../../docs/ContractKeys.md)
-- [../TcfOss.Filtering.EntityFrameworkCore/README.md](../TcfOss.Filtering.EntityFrameworkCore/README.md)
-- [../../README.md](../../README.md)
+- [Request mapping](https://github.com/tcfoss/filtering/blob/master/docs/RequestMapping.md)
+- [Contract keys](https://github.com/tcfoss/filtering/blob/master/docs/ContractKeys.md)
+- [TcfOss.Filtering.EntityFrameworkCore](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.EntityFrameworkCore/README.md)
+- [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

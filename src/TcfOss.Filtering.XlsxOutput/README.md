@@ -22,6 +22,6 @@ using Stream xlsx = query.ToExcelStream(filter, sorts, maxRows: 1000, parsingCon
 
 ## Related docs
 
-- [../../docs/ExportingData.md](../../docs/ExportingData.md)
-- [../TcfOss.Filtering.Linq/README.md](../TcfOss.Filtering.Linq/README.md)
-- [../../README.md](../../README.md)
+- [Exporting data](https://github.com/tcfoss/filtering/blob/master/docs/ExportingData.md)
+- [TcfOss.Filtering.Linq](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Linq/README.md)
+- [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)
