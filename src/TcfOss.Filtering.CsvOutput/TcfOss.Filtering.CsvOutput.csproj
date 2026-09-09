@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <Description>CSV export extensions for filtered and sorted IQueryable data.</Description>
+    <PackageTags>filtering;sorting;paging;linq;csv;export;iqueryable</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\TcfOss.Filtering.Linq\TcfOss.Filtering.Linq.csproj" />
   </ItemGroup>

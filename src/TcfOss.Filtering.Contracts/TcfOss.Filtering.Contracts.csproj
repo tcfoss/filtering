@@ -1,2 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Description>Wire-level contract models and constants for filtering, sorting, paging, and data results.</Description>
+		<PackageTags>filtering;sorting;paging;contracts;DTO;data-results</PackageTags>
+	</PropertyGroup>
+
 </Project>

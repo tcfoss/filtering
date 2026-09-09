@@ -4,9 +4,18 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <MinVerTagPrefix>v</MinVerTagPrefix>
+        <Authors>Thomas C. Flanagan</Authors>
+        <Company>TcfOss</Company>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/tcfoss/filtering</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/tcfoss/filtering</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="MinVer" Version="5.0.0" PrivateAssets="all" />
+        <None Include="$(MSBuildProjectDirectory)/README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 </Project>

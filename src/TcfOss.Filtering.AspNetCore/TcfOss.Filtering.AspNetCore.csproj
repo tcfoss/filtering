@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <Description>ASP.NET Core middleware helpers for handling malformed filter payloads.</Description>
+    <PackageTags>filtering;aspnetcore;middleware;webapi;validation</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
