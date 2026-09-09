@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <Description>Newtonsoft.Json support for TcfOss.Filtering.Contracts filter polymorphism.</Description>
+    <PackageTags>filtering;contracts;json;newtonsoft;serialization</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="[13.0.4,14)" />
   </ItemGroup>

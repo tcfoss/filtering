@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\TcfOss.Filtering.Contracts\TcfOss.Filtering.Contracts.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
+    <Description>Strongly typed filter objects and helpers for converting programmatic filters to TcfOss.Filtering.Contracts wire models.</Description>
+    <PackageTags>filtering;contracts;programmatic;strongly-typed;blazor;wpf</PackageTags>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TcfOss.Filtering.Contracts\TcfOss.Filtering.Contracts.csproj" />
+  </ItemGroup>
 
 </Project>
