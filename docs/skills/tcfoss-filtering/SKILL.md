@@ -1,6 +1,6 @@
 ---
 name: tcfoss-filtering
-description: 'Guide for using the TcfOss.Filtering package family (TcfOss.Filtering.Contracts, TcfOss.Filtering.Linq, TcfOss.Filtering.EntityFrameworkCore, TcfOss.Filtering.CsvOutput, TcfOss.Filtering.XlsxOutput, TcfOss.Filtering.AspNetCore, TcfOss.Filtering.Programmatic, TcfOss.Filtering.Contracts.Newtonsoft, @tcflanagan/filtering-contracts). Use when adding filtering, sorting, paging, or data export to a project; when wiring up DataRequest/DataResult; when writing filter mappers; when using IQueryable extensions; when building frontend requests against a filtering API; when debugging filter deserialization errors.'
+description: 'Guide for using the TcfOss.Filtering package family (TcfOss.Filtering.Contracts, TcfOss.Filtering.Linq, TcfOss.Filtering.EntityFrameworkCore, TcfOss.Filtering.CsvOutput, TcfOss.Filtering.XlsxOutput, TcfOss.Filtering.AspNetCore, TcfOss.Filtering.Programmatic, TcfOss.Filtering.Contracts.Newtonsoft, @tcfoss/filtering-contracts). Use when adding filtering, sorting, paging, or data export to a project; when wiring up DataRequest/DataResult; when writing filter mappers; when using IQueryable extensions; when building frontend requests against a filtering API; when debugging filter deserialization errors.'
 ---
 
 # TcfOss.Filtering Packages
@@ -19,7 +19,7 @@ Filtering, sorting, paging, and export library for .NET and TypeScript.
 | Catch bad filter payloads in ASP.NET Core | `TcfOss.Filtering.AspNetCore` |
 | Build filters in C# code (Blazor / WPF) | `TcfOss.Filtering.Programmatic` |
 | Newtonsoft.Json filter deserialization | `TcfOss.Filtering.Contracts.Newtonsoft` |
-| TypeScript / frontend | `@tcflanagan/filtering-contracts` (npm) |
+| TypeScript / frontend | `@tcfoss/filtering-contracts` (npm) |
 
 ## Core Flow
 
@@ -133,8 +133,8 @@ Build strongly-typed filter objects in C# code, convert to `Contracts` wire mode
 ## TypeScript / Frontend
 
 ```ts
-import { FilterOperators, SortDirections } from '@tcflanagan/filtering-contracts';
-import type { DataRequest } from '@tcflanagan/filtering-contracts';
+import { FilterOperators, SortDirections } from '@tcfoss/filtering-contracts';
+import type { DataRequest } from '@tcfoss/filtering-contracts';
 
 const request: DataRequest = {
   filter: {
