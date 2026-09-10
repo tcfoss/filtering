@@ -12,7 +12,7 @@ Use this README as an index. Package-level usage and examples live in each packa
 |---|---|---|
 | `TcfOss.Filtering.Contracts` | [src/TcfOss.Filtering.Contracts/README.md](src/TcfOss.Filtering.Contracts/README.md) | Wire-level DTOs and constants (`DataRequest`, `DataResult`, operator keys) |
 | `TcfOss.Filtering.Linq` | [src/TcfOss.Filtering.Linq/README.md](src/TcfOss.Filtering.Linq/README.md) | Dynamic LINQ filtering/sorting/paging and request mapping |
-| `@tcflanagan/filtering-contracts` | [npm/tcfoss-filtering-contracts/README.md](npm/tcfoss-filtering-contracts/README.md) | TypeScript mirror of contract types (+ optional Zod schemas) |
+| `@tcfoss/filtering-contracts` | [npm/tcfoss-filtering-contracts/README.md](npm/tcfoss-filtering-contracts/README.md) | TypeScript mirror of contract types (+ optional Zod schemas) |
 
 ### Extension packages
 
@@ -49,14 +49,20 @@ The `Contracts` package defines the wire format and keys.
 The `Linq` package applies filtering/sorting/paging to queries.
 Optional extension packages add framework-specific features (EF Core, export writers, ASP.NET middleware, Newtonsoft converter).
 
-## Contributing
 
-Before opening a PR:
+## Reporting Issues and Contributing
 
-- Run formatting and tests.
-- Add/update tests for behavior changes.
-- Update the relevant package README(s) and docs links.
+Issues for this project are tracked on [IssueTracker](https://issues.tcflanagan.net/filtering). If you encounter any bugs or have feature requests, please submit them there.
+
+Contributions are welcome. Follow the usual fork-and-pull request workflow. Before submitting a pull request, make sure
+
+1. Code is linted: run `dotnet format --severity info --verify-no-changes` in the repo root.
+2. All existing tests succeed.
+3. Any new code includes appropriate tests.
+4. Documentation is updated as necessary (and—especially if AI generates the updates—spaces are removed around any em-dashes).
+
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+

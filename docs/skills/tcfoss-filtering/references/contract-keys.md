@@ -1,6 +1,6 @@
 # Contract Keys Reference
 
-Use the `FilterOperators`, `LogicalOperators`, `SortDirections`, and `QuantifiedOperators` constants from `TcfOss.Filtering.Contracts` (C#) or `@tcflanagan/filtering-contracts` (TypeScript) rather than hardcoding wire strings.
+Use the `FilterOperators`, `LogicalOperators`, `SortDirections`, and `QuantifiedOperators` constants from `TcfOss.Filtering.Contracts` (C#) or `@tcfoss/filtering-contracts` (TypeScript) rather than hardcoding wire strings.
 
 The `filterType` discriminator is required on every filter object on the wire.
 

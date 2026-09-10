@@ -31,6 +31,6 @@ Then open [http://localhost:5176](http://localhost:5176) in a browser.
 | `DynamicDataRequest` → `ToDataResult<dynamic>` (field projection) | `POST /employees/dynamic` |
 | Whitelist/blacklist access control | `Program.cs` |
 | TypeScript `DataRequest` / `DynamicDataRequest` types | `src/main.ts` |
-| Zod schemas (`DataRequestSchema`, `DynamicDataRequestSchema`) | available from `@tcflanagan/filtering-contracts` |
+| Zod schemas (`DataRequestSchema`, `DynamicDataRequestSchema`) | available from `@tcfoss/filtering-contracts` |
 | Composite filter (`AND` of multiple predicates) | Name + Department + Salary + IsActive controls |
 | Pagination | Prev / Next buttons on standard results |

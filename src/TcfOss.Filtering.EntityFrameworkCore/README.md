@@ -5,7 +5,7 @@ EF Core integration helpers for `TcfOss.Filtering.Linq`.
 ## What this package adds
 
 - Async result helpers (`ToDataResultAsync`) for EF Core queries.
-- EF-aware parsing config (`CustomParsingConfig`) for Dynamic LINQ operations that rely on EF symbols (e.g. `LIKE` filters).
+- EF-aware parsing for Dynamic LINQ operations that rely on EF symbols (e.g. `LIKE` filters).
 - Canonical query extension methods in the `TcfOss.Filtering.EntityFrameworkCore.Queryable` namespace (for example, `ApplyFiltering`, `ApplyDataFilter`, `ToDataResult`) that automatically use EF parsing config.
 
 ## Typical usage
