@@ -32,8 +32,16 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.TAGGER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TAGGER_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v6
         with:
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Configure git identity
@@ -135,10 +143,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@tcfoss'
-          # registry-url: 'https://registry.npmjs.org'  # npmjs.org alternative (Trusted Publishing)
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'  # (Trusted Publishing)
 
       - name: Install
         run: npm ci
@@ -152,13 +158,15 @@ jobs:
       - name: Stamp version
         run: npm version "${{ needs.parse-version.outputs.version }}" --no-git-tag-version
 
-      - name: Publish
-        run: npm publish
+      - name: Publish (npmjs)
+        run: npm stage publish
+
+      - name: Publish (GitHub Packages)
+        run: |
+          npm config set //npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN
+          npm publish --registry "https://npm.pkg.github.com"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Trusted Publishing (OIDC) alternative for npmjs.org - no token needed:
-      # - name: Publish
-      #   run: npm publish --access public
 
   finalize-release:
     needs: [parse-version, publish-dotnet, publish-npm]
