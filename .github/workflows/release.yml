@@ -165,19 +165,15 @@ jobs:
       - name: Publish (npmjs)
         run: npm publish
 
-      - name: Generate GitHub App Token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.TAGGER_APP_CLIENT_ID }}
-          private-key: ${{ secrets.TAGGER_APP_PRIVATE_KEY }}
+      - name: Reconfigure npm for GitHub Packages
+        run: |
+          echo "@tcfoss:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish (GitHub Packages)
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-          npm publish --registry "https://npm.pkg.github.com"
-        env:
-          NODE_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: npm publish --registry "https://npm.pkg.github.com"
 
   finalize-release:
     needs: [parse-version, publish-dotnet, publish-npm]
