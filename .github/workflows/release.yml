@@ -128,7 +128,7 @@ jobs:
     needs: [parse-version, tag]
     runs-on: ubuntu-latest
     permissions:
-      # id-token: write  # needed if switching back to npmjs.org Trusted Publishing (OIDC)
+      id-token: write
       packages: write
       contents: read
 
