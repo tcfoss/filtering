@@ -179,8 +179,10 @@ jobs:
 
       - name: Reconfigure npm for GitHub Packages
         run: |
-          echo "@tcfoss:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          cat > .npmrc <<'EOF'
+          @tcfoss:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -193,10 +195,14 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish (GitHub Packages)
         if: steps.check-version-gh.outputs.exists != 'true'
         run: npm publish --registry "https://npm.pkg.github.com"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   finalize-release:
     needs: [parse-version, publish-dotnet, publish-npm]
