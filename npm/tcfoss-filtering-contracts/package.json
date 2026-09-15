@@ -5,7 +5,11 @@
   "license": "MIT",
   "type": "module",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "url": "https://github.com/tcfoss/filtering"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

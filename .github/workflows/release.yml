@@ -163,7 +163,7 @@ jobs:
         run: npm config list
 
       - name: Publish (npmjs)
-        run: npm publish --provenance --access public
+        run: npm publish
 
       - name: Generate GitHub App Token
         id: app-token
