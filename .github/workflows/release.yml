@@ -162,7 +162,19 @@ jobs:
       - name: Show npm config
         run: npm config list
 
+      - name: Check if version already published
+        id: check-version
+        # npm view returns an exit code of 1 if the version does not exist, which we catch
+        run: |
+          if npm view @tcfoss/filtering-contracts@${{ needs.parse-version.outputs.version }} version &>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Version ${{ needs.parse-version.outputs.version }} already exists in the registry. Skipping publish."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish (npmjs)
+        if: steps.check-version.outputs.exists != 'true'
         run: npm publish
 
       - name: Reconfigure npm for GitHub Packages
@@ -172,7 +184,18 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check if version already published (GitHub Packages)
+        id: check-version-gh
+        run: |
+          if npm view @tcfoss/filtering-contracts@${{ needs.parse-version.outputs.version }} version --registry "https://npm.pkg.github.com" &>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Version ${{ needs.parse-version.outputs.version }} already exists in GitHub Packages. Skipping publish."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish (GitHub Packages)
+        if: steps.check-version-gh.outputs.exists != 'true'
         run: npm publish --registry "https://npm.pkg.github.com"
 
   finalize-release:
