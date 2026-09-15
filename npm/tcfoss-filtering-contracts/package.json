@@ -5,8 +5,7 @@
   "license": "MIT",
   "type": "module",
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
