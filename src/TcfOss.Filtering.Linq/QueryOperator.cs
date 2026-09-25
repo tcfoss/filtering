@@ -1,4 +1,5 @@
 using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 
 namespace TcfOss.Filtering.Linq;
 
@@ -49,7 +50,7 @@ public abstract class QueryOperator
     /// Parse a short contract key (as defined in <see cref="TcfOss.Filtering.Contracts.FilterOperators"/>)
     /// into a <see cref="QueryOperator"/>.
     /// </summary>
-    public static QueryOperator ParseContractKey(string key)
+    public static QueryOperator ParseContractKey(string key, string fieldName)
     {
         return key switch
         {
@@ -69,7 +70,7 @@ public abstract class QueryOperator
             FilterOperators.DoesNotContain => DoesNotContain,
             FilterOperators.Like => Like,
             FilterOperators.NotLike => NotLike,
-            _ => throw new FilterMappingException(string.Format(FilterMappingException.UnknownFilterOperatorPattern, key))
+            _ => throw new UnknownFilterOperatorException(key, fieldName)
         };
     }
 

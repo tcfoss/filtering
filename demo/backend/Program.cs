@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Demo.Api;
+using TcfOss.Filtering.Contracts.Errors;
 using TcfOss.Filtering.Linq;
 using TcfOss.Filtering.Linq.FilterMapping;
 using TcfOss.Filtering.Linq.Queryable;
@@ -40,7 +41,7 @@ app.MapPost("/employees", (Contracts.DataRequest dto) =>
         DataRequest request = mapper.ToDataRequest(dto);
         return Results.Ok(employees.AsQueryable().ToDataResult(request));
     }
-    catch (Contracts.FilterMappingException ex)
+    catch (FilterException ex)
     {
         return Results.BadRequest(new { error = ex.Message });
     }
@@ -60,7 +61,7 @@ app.MapPost("/employees/dynamic", (Contracts.DynamicDataRequest dto) =>
         DynamicDataRequest request = mapper.ToDataRequest(dto);
         return Results.Ok(employees.AsQueryable().ToDataResult(request));
     }
-    catch (Contracts.FilterMappingException ex)
+    catch (FilterException ex)
     {
         return Results.BadRequest(new { error = ex.Message });
     }

@@ -1,4 +1,5 @@
 using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 
 namespace TcfOss.Filtering.Linq.FilterMapping;
 
@@ -9,7 +10,7 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
 
     public override SimpleFilter ToFilter(Contracts.SimpleFilter dto)
     {
-        var op = QueryOperator.ParseContractKey(dto.Operator);
+        var op = QueryOperator.ParseContractKey(dto.Operator, dto.Field);
 
         Func<string, object> parser = GetValueParser(dto.Field);
 
@@ -22,9 +23,9 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
                 Value = null!
             };
         }
-        else if (dto.Value == null)
+        if (dto.Value == null)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.NullValueNotAllowedPattern, dto.Operator));
+            throw new NullNotAllowedException(dto.Operator, dto.Field);
         }
 
         try
@@ -39,7 +40,7 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
         }
         catch (FormatException ex)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.Value), ex);
+            throw new InvalidValueException(dto.Value, dto.Field, ex);
         }
     }
 
@@ -47,7 +48,7 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
     {
         if (dto.Values.Length == 0)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.EmptyValuesPattern, dto.Field));
+            throw new InvalidEmptyValueSetException(dto.Field);
         }
 
         Func<string, object> parser = GetValueParser(dto.Field);
@@ -60,7 +61,7 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
             }
             catch (FormatException ex)
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.Values[i]), ex);
+                throw new InvalidValueException(dto.Values[i], dto.Field, ex);
             }
         }
 
@@ -81,7 +82,7 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
         }
         catch (FormatException ex)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.ValueFrom), ex);
+            throw new InvalidValueException(dto.ValueFrom, dto.Field, ex);
         }
 
         try
@@ -90,7 +91,7 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
         }
         catch (FormatException ex)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.ValueTo), ex);
+            throw new InvalidValueException(dto.ValueTo, dto.Field, ex);
         }
 
         return new RangeFilter(dto.Field, valueFrom, valueTo, dto.Exclusive, dto.Negated);
@@ -116,18 +117,18 @@ public class DictFilterMapper(Dictionary<string, Func<string, object>> valuePars
                 || (!components[1].Equals("Count", StringComparison.OrdinalIgnoreCase)
                     && !components[1].Equals("Length", StringComparison.OrdinalIgnoreCase)))
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+                throw new UnsupportedCollectionNavigationException(fieldName, components[1]);
             }
 
             if (!_valueParsers.ContainsKey(components[0]))
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+                throw new UnknownFieldException(fieldName);
             }
 
             return v => int.Parse(v);
         }
 
-        throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+        throw new UnknownFieldException(fieldName);
     }
 
     public override SortComponent ToSortComponent(Contracts.SortComponent dto)

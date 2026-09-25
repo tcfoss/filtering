@@ -1,4 +1,5 @@
 using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 using TcfOss.Filtering.Linq.FilterMapping;
 
 namespace TcfOss.Filtering.Linq.Tests.FilterMapping;
@@ -49,8 +50,9 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SimpleFilter("UnknownField", FilterOperators.IsNull);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
         Assert.Contains("UnknownField", ex.Message);
+        Assert.Equal("UnknownField", ex.FieldName);
     }
 
     [Fact]
@@ -58,8 +60,9 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SimpleFilter("UnknownField", FilterOperators.IsNotNull);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
         Assert.Contains("UnknownField", ex.Message);
+        Assert.Equal("UnknownField", ex.FieldName);
     }
 
     [Fact]
@@ -77,8 +80,10 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SimpleFilter("Age", FilterOperators.EqualTo);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        NullNotAllowedException ex = Assert.Throws<NullNotAllowedException>(() => mapper.ToFilter(dto));
         Assert.Contains(FilterOperators.EqualTo, ex.Message);
+        Assert.Equal(FilterOperators.EqualTo, ex.Operator);
+        Assert.Equal("Age", ex.FieldName);
     }
 
     [Fact]
@@ -86,8 +91,9 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SimpleFilter("UnknownField", FilterOperators.EqualTo, "x");
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
         Assert.Contains("UnknownField", ex.Message);
+        Assert.Equal("UnknownField", ex.FieldName);
     }
 
     [Fact]
@@ -173,10 +179,12 @@ public class DictFilterMapperTests
         });
 
         var dto = new Contracts.SimpleFilter("Age", FilterOperators.EqualTo, "not-a-number");
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
         Assert.Contains("Age", ex.Message);
         Assert.Contains("not-a-number", ex.Message);
         Assert.IsType<FormatException>(ex.InnerException);
+        Assert.Equal("Age", ex.FieldName);
+        Assert.Equal("not-a-number", ex.Value);
     }
 
     [Fact]
@@ -188,9 +196,12 @@ public class DictFilterMapperTests
         });
 
         var dto = new Contracts.SimpleFilter("Salary", FilterOperators.EqualTo, "abc");
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
         Assert.Contains("Salary", ex.Message);
+        Assert.Contains("abc", ex.Message);
         Assert.IsType<FormatException>(ex.InnerException);
+        Assert.Equal("Salary", ex.FieldName);
+        Assert.Equal("abc", ex.Value);
     }
 
     // -------------------------------------------------------------------------
@@ -233,8 +244,9 @@ public class DictFilterMapperTests
             ["Name"] = v => v,
         });
         var dto = new Contracts.SimpleFilter("Enemies.Count", FilterOperators.GreaterThan, "0");
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
         Assert.Contains("Enemies.Count", ex.Message);
+        Assert.Equal("Enemies.Count", ex.FieldName);
     }
 
     [Fact]
@@ -271,8 +283,9 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SortComponent("UnknownField", SortDirections.Ascending);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToSortComponent(dto));
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToSortComponent(dto));
         Assert.Contains("UnknownField", ex.Message);
+        Assert.Equal("UnknownField", ex.FieldName);
     }
 
     [Fact]
@@ -300,8 +313,9 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SortComponent("Enemies.Count", SortDirections.Ascending);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToSortComponent(dto));
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToSortComponent(dto));
         Assert.Contains("Enemies.Count", ex.Message);
+        Assert.Equal("Enemies.Count", ex.FieldName);
     }
 
     [Fact]
@@ -309,8 +323,10 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SortComponent("Friends.Name", SortDirections.Ascending);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToSortComponent(dto));
+        UnsupportedCollectionNavigationException ex = Assert.Throws<UnsupportedCollectionNavigationException>(() => mapper.ToSortComponent(dto));
         Assert.Contains("Friends.Name", ex.Message);
+        Assert.Equal("Friends.Name", ex.FieldName);
+        Assert.Equal("Name", ex.GivenProperty);
     }
 
     [Fact]
@@ -318,8 +334,10 @@ public class DictFilterMapperTests
     {
         DictFilterMapper mapper = MakeMapper();
         var dto = new Contracts.SortComponent("A.B.Count", SortDirections.Ascending);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToSortComponent(dto));
+        UnsupportedCollectionNavigationException ex = Assert.Throws<UnsupportedCollectionNavigationException>(() => mapper.ToSortComponent(dto));
         Assert.Contains("A.B.Count", ex.Message);
+        Assert.Equal("A.B.Count", ex.FieldName);
+        Assert.Equal("B", ex.GivenProperty);
     }
 
 
@@ -369,9 +387,9 @@ public class DictFilterMapperTests
         });
         var dto = new Contracts.SetFilter("Age", ["25", "not-a-number"]);
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
-        Assert.Contains("Age", ex.Message);
-        Assert.Contains("not-a-number", ex.Message);
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
+        Assert.Equal("Age", ex.FieldName);
+        Assert.Equal("not-a-number", ex.Value);
         Assert.IsType<FormatException>(ex.InnerException);
     }
 
@@ -384,8 +402,8 @@ public class DictFilterMapperTests
         });
         var dto = new Contracts.SetFilter("Nonexistent", ["A", "B"]);
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
-        Assert.Contains("Nonexistent", ex.Message);
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
+        Assert.Equal("Nonexistent", ex.FieldName);
     }
 
     [Fact]
@@ -397,8 +415,8 @@ public class DictFilterMapperTests
         });
         var dto = new Contracts.SetFilter("Name", []);
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
-        Assert.Contains("Name", ex.Message);
+        InvalidEmptyValueSetException ex = Assert.Throws<InvalidEmptyValueSetException>(() => mapper.ToFilter(dto));
+        Assert.Equal("Name", ex.FieldName);
     }
 
     [Fact]
@@ -469,9 +487,9 @@ public class DictFilterMapperTests
         });
         var dto = new Contracts.RangeFilter("Age", "not-a-number", "31");
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
-        Assert.Contains("Age", ex.Message);
-        Assert.Contains("not-a-number", ex.Message);
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
+        Assert.Equal("Age", ex.FieldName);
+        Assert.Equal("not-a-number", ex.Value);
         Assert.IsType<FormatException>(ex.InnerException);
     }
 
@@ -484,9 +502,9 @@ public class DictFilterMapperTests
         });
         var dto = new Contracts.RangeFilter("Age", "27", "not-a-number");
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
-        Assert.Contains("Age", ex.Message);
-        Assert.Contains("not-a-number", ex.Message);
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
+        Assert.Equal("Age", ex.FieldName);
+        Assert.Equal("not-a-number", ex.Value);
         Assert.IsType<FormatException>(ex.InnerException);
     }
 
@@ -499,7 +517,7 @@ public class DictFilterMapperTests
         });
         var dto = new Contracts.RangeFilter("Salary", "1000", "5000");
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
-        Assert.Contains("Salary", ex.Message);
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
+        Assert.Equal("Salary", ex.FieldName);
     }
 }

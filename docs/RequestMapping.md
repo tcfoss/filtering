@@ -51,7 +51,7 @@ var mapper = new ReflectionFilterMapper<Employee>(
     blacklist: ["UserAccount.PasswordHash", "SocialSecurityNumber"]);
 ```
 
-Any field not permitted throws `FilterMappingException` to prevent leaking field existence.
+Any field not permitted throws `UnknownFieldException` to prevent leaking field existence.
 
 Wildcards are supported in whitelist and blacklist patterns:
 

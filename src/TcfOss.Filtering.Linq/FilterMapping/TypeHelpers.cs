@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Reflection;
-using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 
 namespace TcfOss.Filtering.Linq.FilterMapping;
 
@@ -20,9 +20,9 @@ public static class TypeHelpers
                 // Intermediate traversal still uses simple types for parser-compatible navigation.
                 currentType = GetPropertyType(parentType, components[0]);
             }
-            catch (FilterMappingException)
+            catch (FilterException)
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+                throw new UnknownFieldException(fieldName);
             }
 
             string rest = string.Join('.', components.Skip(1));
@@ -31,20 +31,20 @@ public static class TypeHelpers
                 && !rest.Equals("Count", StringComparison.OrdinalIgnoreCase)
                 && !rest.Equals("Length", StringComparison.OrdinalIgnoreCase))
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnsupportedCollectionNavigationPattern, components[0]));
+                throw new UnsupportedCollectionNavigationException(components[0], components[1]);
             }
 
             try
             {
                 return GetPropertyTypePreserveNullability(currentType, rest);
             }
-            catch (FilterMappingException)
+            catch (FilterException)
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+                throw new UnknownFieldException(fieldName);
             }
         }
 
-        PropertyInfo prop = parentType.GetProperty(fieldName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance) ?? throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+        PropertyInfo prop = parentType.GetProperty(fieldName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance) ?? throw new UnknownFieldException(fieldName);
         return prop.PropertyType;
     }
 
@@ -58,9 +58,9 @@ public static class TypeHelpers
             {
                 currentType = GetPropertyType(parentType, components[0]);
             }
-            catch (FilterMappingException)
+            catch (FilterException)
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+                throw new UnknownFieldException(fieldName);
             }
 
             string rest = string.Join('.', components.Skip(1));
@@ -69,20 +69,20 @@ public static class TypeHelpers
                 && !rest.Equals("Count", StringComparison.OrdinalIgnoreCase)
                 && !rest.Equals("Length", StringComparison.OrdinalIgnoreCase))
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnsupportedCollectionNavigationPattern, components[0]));
+                throw new UnsupportedCollectionNavigationException(components[0], components[1]);
             }
 
             try
             {
                 return GetPropertyType(currentType, rest);
             }
-            catch (FilterMappingException)
+            catch (FilterException)
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+                throw new UnknownFieldException(fieldName);
             }
         }
 
-        PropertyInfo prop = parentType.GetProperty(fieldName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance) ?? throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+        PropertyInfo prop = parentType.GetProperty(fieldName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance) ?? throw new UnknownFieldException(fieldName);
 
         Type propType = prop.PropertyType;
         if (prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -185,7 +185,7 @@ public static class TypeHelpers
             return GetValueGuid;
         }
 
-        throw new FilterMappingException(string.Format(FilterMappingException.UnsupportedFieldTypePattern, fieldName ?? "unknown", t.Name));
+        throw new UnsupportedFieldTypeException(fieldName ?? "unknown", t.Name);
     }
 
     public static string GetValueString(string value)

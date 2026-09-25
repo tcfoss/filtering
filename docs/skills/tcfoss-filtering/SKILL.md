@@ -80,7 +80,7 @@ var mapper = new ReflectionFilterMapper<Employee>(whitelist: ["Name", "Departmen
 var mapper = new ReflectionFilterMapper<Employee>(blacklist: ["UserAccount.**"]);
 ```
 
-Any disallowed field throws `FilterMappingException`.
+Any disallowed field throws `UnknownFieldException`.
 
 ## EF Core integration
 

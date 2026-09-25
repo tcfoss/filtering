@@ -52,8 +52,8 @@ public class FilterTests
     [Fact]
     public void ParseContractKey_LikeOperators()
     {
-        Assert.Same(QueryOperator.Like, QueryOperator.ParseContractKey(FilterOperators.Like));
-        Assert.Same(QueryOperator.NotLike, QueryOperator.ParseContractKey(FilterOperators.NotLike));
+        Assert.Same(QueryOperator.Like, QueryOperator.ParseContractKey(FilterOperators.Like, "field"));
+        Assert.Same(QueryOperator.NotLike, QueryOperator.ParseContractKey(FilterOperators.NotLike, "field"));
     }
 
     [Fact]
