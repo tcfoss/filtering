@@ -163,7 +163,6 @@ jobs:
     with:
       branch: ${{ github.head_ref }}
       api-url: ${{ vars.ISSUETRACKER_API_URL }}
-      release-date: ${{ needs.today.outputs.date }}
       status: Released
       work-item-status: Released
       work-items-to-be-resolved: ${{ needs.validate-work-items.outputs.work-item-ids }}
