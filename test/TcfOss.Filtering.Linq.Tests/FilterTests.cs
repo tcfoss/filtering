@@ -5,6 +5,7 @@ namespace TcfOss.Filtering.Linq.Tests;
 
 public class FilterTests
 {
+    // ReSharper disable once NotAccessedPositionalProperty.Local
     private record PersonProjection(string Name, int Age);
 
     [Theory]
@@ -51,8 +52,8 @@ public class FilterTests
     [Fact]
     public void ParseContractKey_LikeOperators()
     {
-        Assert.Same(QueryOperator.Like, QueryOperator.ParseContractKey(FilterOperators.Like));
-        Assert.Same(QueryOperator.NotLike, QueryOperator.ParseContractKey(FilterOperators.NotLike));
+        Assert.Same(QueryOperator.Like, QueryOperator.ParseContractKey(FilterOperators.Like, "field"));
+        Assert.Same(QueryOperator.NotLike, QueryOperator.ParseContractKey(FilterOperators.NotLike, "field"));
     }
 
     [Fact]
@@ -129,9 +130,8 @@ public class FilterTests
         Assert.Equal("Friends.Any(Name.StartsWith(@0))", result);
 
         ConstantExpression[] actualValues = valueManager.GetValueExpressions();
-        Assert.Single(actualValues);
-        Assert.IsType<ConstantExpression>(actualValues[0]);
-        ConstantExpression constant = actualValues[0];
+        ConstantExpression actualValue = Assert.Single(actualValues);
+        ConstantExpression constant = Assert.IsType<ConstantExpression>(actualValue);
         Assert.Equal("J", constant.Value);
     }
 
@@ -205,8 +205,8 @@ public class FilterTests
             .ApplyFiltering(filter, valueManager)
             .ToList();
 
-        Assert.Single(result);
-        Assert.Equal("Ivan", result[0].Name);
+        TestData.Person single = Assert.Single(result);
+        Assert.Equal("Ivan", single.Name);
     }
 
     [Fact]
@@ -270,6 +270,7 @@ public class FilterTests
     public void SetFilter_NotIn_FiltersData()
     {
         string[] excluded = ["Alice", "Bob", "Charlie"];
+        // ReSharper disable once CoVariantArrayConversion
         var filter = new SetFilter("Name", excluded, negated: true);
         var valueManager = new ValueManager();
 

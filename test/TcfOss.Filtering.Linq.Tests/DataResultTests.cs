@@ -345,9 +345,8 @@ public class DataResultTests
         IQueryable<Outer> items = new[] { new Outer("Alice", new Nested("ChildName")) }.AsQueryable();
 
         var resultList = items.ApplyFieldSelection(["Name", "Child.Name"]).ToList();
-        Assert.Single(resultList);
+        dynamic first = Assert.Single(resultList);
 
-        dynamic first = resultList[0];
         Assert.Equal("Alice", (string)first.Name);
         Assert.Equal("ChildName", (string)first.Child_Name);
     }

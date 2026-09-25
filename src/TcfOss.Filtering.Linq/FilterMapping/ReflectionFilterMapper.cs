@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 
 namespace TcfOss.Filtering.Linq.FilterMapping;
 
@@ -9,6 +10,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
 {
     // ReSharper disable once StaticMemberInGenericType
     private static readonly ConcurrentDictionary<string, Func<string, object>> s_valueParsers = new(comparer: StringComparer.OrdinalIgnoreCase);
+    // ReSharper disable once StaticMemberInGenericType
     private static readonly ConcurrentDictionary<string, Type> s_propertyTypes = new(comparer: StringComparer.OrdinalIgnoreCase);
 
     private readonly HashSet<string>? _whitelist = whitelist is null ? null : new HashSet<string>(whitelist, StringComparer.OrdinalIgnoreCase);
@@ -16,7 +18,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
 
     public override SimpleFilter ToFilter(Contracts.SimpleFilter dto)
     {
-        var op = QueryOperator.ParseContractKey(dto.Operator);
+        var op = QueryOperator.ParseContractKey(dto.Operator, dto.Field);
 
         Func<string, object> parser = GetValueParser(dto.Field);
 
@@ -29,9 +31,9 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
                 Value = null!
             };
         }
-        else if (dto.Value == null)
+        if (dto.Value == null)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.NullValueNotAllowedPattern, dto.Operator));
+            throw new NullNotAllowedException(dto.Operator, dto.Field);
         }
 
         try
@@ -46,7 +48,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
         }
         catch (FormatException ex)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.Value), ex);
+            throw new InvalidValueException(dto.Value, dto.Field, ex);
         }
     }
 
@@ -54,7 +56,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
     {
         if (dto.Values.Length == 0)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.EmptyValuesPattern, dto.Field));
+            throw new InvalidEmptyValueSetException(dto.Field);
         }
 
         Func<string, object> parser = GetValueParser(dto.Field);
@@ -67,14 +69,11 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
             }
             catch (FormatException ex)
             {
-                throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.Values[i]), ex);
+                throw new InvalidValueException(dto.Values[i], dto.Field, ex);
             }
         }
 
-        Type elementType = s_propertyTypes.GetOrAdd(dto.Field, _ =>
-        {
-            return typeof(T).GetPropertyTypePreserveNullability(dto.Field);
-        });
+        Type elementType = s_propertyTypes.GetOrAdd(dto.Field, _ => typeof(T).GetPropertyTypePreserveNullability(dto.Field));
 
         return new SetFilter(dto.Field, values, dto.Negated, elementType);
     }
@@ -92,7 +91,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
         }
         catch (FormatException ex)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.ValueFrom), ex);
+            throw new InvalidValueException(dto.ValueFrom, dto.Field, ex);
         }
 
         try
@@ -101,7 +100,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
         }
         catch (FormatException ex)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidValuePattern, dto.Field, dto.ValueTo), ex);
+            throw new InvalidValueException(dto.ValueTo, dto.Field, ex);
         }
 
         return new RangeFilter(dto.Field, valueFrom, valueTo, dto.Exclusive, dto.Negated);
@@ -158,7 +157,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
             return;
         }
 
-        throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+        throw new UnknownFieldException(fieldName);
     }
 
     private static void BlacklistGuard(string fieldName, HashSet<string>? blacklist)
@@ -170,7 +169,7 @@ public class ReflectionFilterMapper<T>(IEnumerable<string>? whitelist = null, IE
 
         if (MatchesWildcardPattern(fieldName, blacklist))
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.UnknownFieldPattern, fieldName));
+            throw new UnknownFieldException(fieldName);
         }
     }
 

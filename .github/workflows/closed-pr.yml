@@ -12,8 +12,21 @@ on:
         description: 'Delete and recreate the tag if it already exists'
         type: boolean
         default: false
-
 jobs:
+
+  resolve-work-items:
+    if: github.event.pull_request.merged == true
+    uses: tcfoss/github-actions/.github/workflows/resolve-pr-work-items.yml@v1
+    permissions:
+      contents: read
+    with:
+      pull-request-description: ${{ github.event.pull_request.body }}
+      api-url: ${{ vars.ISSUETRACKER_API_URL }}
+      target-status: Done
+    secrets:
+      issuetracker-api-token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
+
+
   parse-version:
     if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/') && github.base_ref == 'master')
     runs-on: ubuntu-latest
@@ -60,7 +73,7 @@ jobs:
           git push origin "$version"
 
   publish-dotnet:
-    needs: tag
+    needs: [tag, parse-version]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -87,22 +100,25 @@ jobs:
 
       - name: Pack
         run: |
-          dotnet pack src/TcfOss.Filtering.Contracts/TcfOss.Filtering.Contracts.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.Contracts.Newtonsoft/TcfOss.Filtering.Contracts.Newtonsoft.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.Linq/TcfOss.Filtering.Linq.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.EntityFrameworkCore/TcfOss.Filtering.EntityFrameworkCore.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.AspNetCore/TcfOss.Filtering.AspNetCore.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.CsvOutput/TcfOss.Filtering.CsvOutput.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.XlsxOutput/TcfOss.Filtering.XlsxOutput.csproj \
-            --no-build --configuration Release --output ./nupkg
-          dotnet pack src/TcfOss.Filtering.Programmatic/TcfOss.Filtering.Programmatic.csproj \
-            --no-build --configuration Release --output ./nupkg
+          version="v${{ needs.parse-version.outputs.version }}"
+          projects=(
+            "src/TcfOss.Filtering.Contracts/TcfOss.Filtering.Contracts.csproj"
+            "src/TcfOss.Filtering.Contracts.Newtonsoft/TcfOss.Filtering.Contracts.Newtonsoft.csproj"
+            "src/TcfOss.Filtering.Linq/TcfOss.Filtering.Linq.csproj"
+            "src/TcfOss.Filtering.EntityFrameworkCore/TcfOss.Filtering.EntityFrameworkCore.csproj"
+            "src/TcfOss.Filtering.AspNetCore/TcfOss.Filtering.AspNetCore.csproj"
+            "src/TcfOss.Filtering.CsvOutput/TcfOss.Filtering.CsvOutput.csproj"
+            "src/TcfOss.Filtering.XlsxOutput/TcfOss.Filtering.XlsxOutput.csproj"
+            "src/TcfOss.Filtering.Programmatic/TcfOss.Filtering.Programmatic.csproj"
+          )
+
+          for project in "${projects[@]}"; do
+            dotnet pack "$project" \
+                --no-build \
+                --configuration Release \
+                -p:PackageVersion="$version" \
+                --output ./nupkg
+          done
 
       - name: Push to GitHub Packages
         run: |
@@ -205,7 +221,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   finalize-release:
-    needs: [parse-version, publish-dotnet, publish-npm]
+    needs: [parse-version, publish-dotnet, publish-npm, resolve-work-items]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -218,6 +234,8 @@ jobs:
           api-url: ${{ vars.ISSUETRACKER_API_URL }}
           version: ${{ needs.parse-version.outputs.version }}
           token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
+          status: Released
+          work-item-status: Released
           release-url: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.parse-version.outputs.version }}
 
       - name: Release notes

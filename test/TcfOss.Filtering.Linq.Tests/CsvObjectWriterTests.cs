@@ -370,8 +370,8 @@ public class CsvObjectWriterTests
             new SerializationOptions { IncludeHeaders = false });
 
         string[] returnedLines = Lines(ReadAll(returnedStream));
-        Assert.Single(returnedLines);
-        Assert.StartsWith("Bob,", returnedLines[0]);
+        string returnedLine = Assert.Single(returnedLines);
+        Assert.StartsWith("Bob,", returnedLine);
 
         using MemoryStream providedStream = new();
         rows.AsQueryable().ToCsvStream(
@@ -383,8 +383,8 @@ public class CsvObjectWriterTests
             new SerializationOptions { IncludeHeaders = false });
 
         string[] providedLines = Lines(ReadAll(providedStream));
-        Assert.Single(providedLines);
-        Assert.StartsWith("Bob,", providedLines[0]);
+        string providedLine = Assert.Single(providedLines);
+        Assert.StartsWith("Bob,", providedLine);
     }
 
     [Fact]

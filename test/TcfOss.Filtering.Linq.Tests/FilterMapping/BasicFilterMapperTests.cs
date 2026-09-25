@@ -1,4 +1,5 @@
 using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 using TcfOss.Filtering.Linq.FilterMapping;
 
 namespace TcfOss.Filtering.Linq.Tests.FilterMapping;
@@ -124,11 +125,31 @@ public class BasicFilterMapperTests
     }
 
     [Fact]
+    public void InvalidField_Empty_Throws()
+    {
+        var dto = new Contracts.SimpleFilter("", FilterOperators.EqualTo, "Alice");
+        InvalidFieldNameException ex = Assert.Throws<InvalidFieldNameException>(() => _mapper.ToFilter(dto));
+        Assert.Contains("field name", ex.Message);
+        Assert.Equal("", ex.FieldName);
+    }
+
+    [Fact]
+    public void InvalidField_NonsenseCharacter_Throws()
+    {
+        var dto = new Contracts.SimpleFilter("My+Field", FilterOperators.EqualTo, "Alice");
+        InvalidFieldNameException ex = Assert.Throws<InvalidFieldNameException>(() => _mapper.ToFilter(dto));
+        Assert.Contains("field name", ex.Message);
+        Assert.Equal("My+Field", ex.FieldName);
+    }
+
+    [Fact]
     public void UnknownOperator_ThrowsFilterMappingException()
     {
         var dto = new Contracts.SimpleFilter("Name", "bogus", "Alice");
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => _mapper.ToFilter(dto));
+        UnknownFilterOperatorException ex = Assert.Throws<UnknownFilterOperatorException>(() => _mapper.ToFilter(dto));
         Assert.Contains("bogus", ex.Message);
+        Assert.Equal("bogus", ex.Operator);
+        Assert.Equal("Name", ex.FieldName);
     }
 
     [Fact]
@@ -138,15 +159,16 @@ public class BasicFilterMapperTests
         [
             new Contracts.SimpleFilter("Name", FilterOperators.EqualTo, "Alice"),
             ]);
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => _mapper.ToFilter(dto));
+        UnknownLogicalOperatorException ex = Assert.Throws<UnknownLogicalOperatorException>(() => _mapper.ToFilter(dto));
         Assert.Contains("bogus", ex.Message);
+        Assert.Equal("bogus", ex.Operator);
     }
 
     [Fact]
     public void UnknownFilterType_ThrowsFilterMappingException()
     {
         var dto = new FakeFilter();
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => _mapper.ToFilter(dto));
+        UnknownFilterTypeException ex = Assert.Throws<UnknownFilterTypeException>(() => _mapper.ToFilter(dto));
         Assert.Contains("mock", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -213,8 +235,10 @@ public class BasicFilterMapperTests
             SubFilter = new Contracts.SimpleFilter("Value", FilterOperators.EqualTo, "x"),
         };
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => _mapper.ToFilter(dto));
+        UnknownQuantifiedOperatorException ex = Assert.Throws<UnknownQuantifiedOperatorException>(() => _mapper.ToFilter(dto));
         Assert.Contains("bogus", ex.Message);
+        Assert.Equal("bogus", ex.Operator);
+        Assert.Equal("Tags", ex.FieldName);
     }
 
     [Fact]
@@ -251,9 +275,9 @@ public class BasicFilterMapperTests
         Assert.Equal("Name", simpleFilter.Field);
         Assert.Equal("Smith", simpleFilter.Value);
 
-        Assert.Single(result.Sorts);
-        Assert.Equal("Age", result.Sorts[0].Field);
-        Assert.Equal(SortDirection.Descending, result.Sorts[0].Direction);
+        SortComponent singleSort = Assert.Single(result.Sorts);
+        Assert.Equal("Age", singleSort.Field);
+        Assert.Equal(SortDirection.Descending, singleSort.Direction);
 
         Assert.Equal(2, result.Page);
         Assert.Equal(50, result.PageSize);
@@ -274,9 +298,9 @@ public class BasicFilterMapperTests
 
         Assert.Null(result.Filter);
 
-        Assert.Single(result.Sorts);
-        Assert.Equal("Age", result.Sorts[0].Field);
-        Assert.Equal(SortDirection.Descending, result.Sorts[0].Direction);
+        SortComponent single = Assert.Single(result.Sorts);
+        Assert.Equal("Age", single.Field);
+        Assert.Equal(SortDirection.Descending, single.Direction);
 
         Assert.Equal(1, result.Page);
         Assert.Equal(20, result.PageSize);
@@ -303,9 +327,9 @@ public class BasicFilterMapperTests
         Assert.Equal("Name", simpleFilter.Field);
         Assert.Equal("Smith", simpleFilter.Value);
 
-        Assert.Single(result.Sorts);
-        Assert.Equal("Age", result.Sorts[0].Field);
-        Assert.Equal(SortDirection.Descending, result.Sorts[0].Direction);
+        SortComponent single = Assert.Single(result.Sorts);
+        Assert.Equal("Age", single.Field);
+        Assert.Equal(SortDirection.Descending, single.Direction);
 
         Assert.Equal(2, result.Page);
         Assert.Equal(50, result.PageSize);
@@ -360,8 +384,10 @@ public class BasicFilterMapperTests
     public void Sort_UnknownDirection_ThrowsFilterMappingException()
     {
         var dto = new Contracts.SortComponent("Name", "sideways");
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => _mapper.ToSortComponent(dto));
+        UnknownSortDirectionException ex = Assert.Throws<UnknownSortDirectionException>(() => _mapper.ToSortComponent(dto));
         Assert.Contains("sideways", ex.Message);
+        Assert.Equal("sideways", ex.Direction);
+        Assert.Equal("Name", ex.FieldName);
     }
 
     // -------------------------------------------------------------------------
@@ -400,8 +426,9 @@ public class BasicFilterMapperTests
         var mapper = new BasicFilterMapper();
         var dto = new Contracts.SetFilter("Name", []);
 
-        FilterMappingException ex = Assert.Throws<FilterMappingException>(() => mapper.ToFilter(dto));
+        InvalidEmptyValueSetException ex = Assert.Throws<InvalidEmptyValueSetException>(() => mapper.ToFilter(dto));
         Assert.Contains("Name", ex.Message);
+        Assert.Equal("Name", ex.FieldName);
     }
 
     [Fact]
@@ -455,5 +482,39 @@ public class BasicFilterMapperTests
         IFilter result = mapper.ToFilter(dto);
 
         Assert.IsType<RangeFilter>(result);
+    }
+
+    // -------------------------------------------------------------------------
+    // Pagination Validation
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void ToDataRequest_InvalidPage_Throws()
+    {
+        var mapper = new BasicFilterMapper();
+        var dto = new Contracts.DataRequest
+        {
+            Page = 0,
+            PageSize = 20,
+        };
+
+        InvalidPageException ex = Assert.Throws<InvalidPageException>(() => mapper.ToDataRequest(dto));
+        Assert.Contains("Page", ex.Message);
+        Assert.Equal(0, ex.PageNumber);
+    }
+
+    [Fact]
+    public void ToDataRequest_InvalidPageSize_Throws()
+    {
+        var mapper = new BasicFilterMapper();
+        var dto = new Contracts.DataRequest
+        {
+            Page = 1,
+            PageSize = 0,
+        };
+
+        InvalidPageSizeException ex = Assert.Throws<InvalidPageSizeException>(() => mapper.ToDataRequest(dto));
+        Assert.Contains("PageSize", ex.Message);
+        Assert.Equal(0, ex.PageSize);
     }
 }

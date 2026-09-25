@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using TcfOss.Filtering.Contracts;
+using TcfOss.Filtering.Contracts.Errors;
 
 namespace TcfOss.Filtering.Linq.FilterMapping;
 
@@ -12,7 +13,7 @@ public partial class BasicFilterMapper : IMapFilters
     {
         if (string.IsNullOrEmpty(field) || !FieldNameRegex().IsMatch(field))
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidFieldNamePattern, field));
+            throw new InvalidFieldNameException(field);
         }
     }
 
@@ -25,14 +26,14 @@ public partial class BasicFilterMapper : IMapFilters
             Contracts.SetFilter set => ToFilter(set),
             Contracts.RangeFilter range => ToFilter(range),
             Contracts.QuantifiedFilter quantified => ToFilter(quantified),
-            _ => throw new FilterMappingException(string.Format(FilterMappingException.UnknownFilterTypePattern, dto.FilterType))
+            _ => throw new UnknownFilterTypeException(dto.FilterType)
         };
     }
 
     public virtual SimpleFilter ToFilter(Contracts.SimpleFilter dto)
     {
         ValidateFieldName(dto.Field);
-        QueryOperator op = QueryOperator.ParseContractKey(dto.Operator);
+        QueryOperator op = QueryOperator.ParseContractKey(dto.Operator, dto.Field);
         return new SimpleFilter(dto.Field, op, dto.Value ?? string.Empty);
     }
 
@@ -42,7 +43,7 @@ public partial class BasicFilterMapper : IMapFilters
         {
             LogicalOperators.And => LogicalOperator.And,
             LogicalOperators.Or => LogicalOperator.Or,
-            _ => throw new FilterMappingException(string.Format(FilterMappingException.UnknownLogicalOperatorPattern, dto.LogicalOperator))
+            _ => throw new UnknownLogicalOperatorException(dto.LogicalOperator)
         };
 
         IFilter[] filters = [.. dto.Filters.Select(ToFilter)];
@@ -54,7 +55,7 @@ public partial class BasicFilterMapper : IMapFilters
         ValidateFieldName(dto.Field);
         if (dto.Values.Length == 0)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.EmptyValuesPattern, dto.Field));
+            throw new InvalidEmptyValueSetException(dto.Field);
         }
 
         object[] values = [.. dto.Values.Select(v => (object)v)];
@@ -69,7 +70,7 @@ public partial class BasicFilterMapper : IMapFilters
         {
             QuantifiedOperators.Any => QuantifiedOperator.Any,
             QuantifiedOperators.All => QuantifiedOperator.All,
-            _ => throw new FilterMappingException(string.Format(FilterMappingException.UnknownQuantifiedOperatorPattern, dto.Operator))
+            _ => throw new UnknownQuantifiedOperatorException(dto.Operator, dto.Field)
         };
         return new QuantifiedFilter(dto.Field, subFilter, op)
         {
@@ -91,7 +92,7 @@ public partial class BasicFilterMapper : IMapFilters
         {
             SortDirections.Ascending => SortDirection.Ascending,
             SortDirections.Descending => SortDirection.Descending,
-            _ => throw new FilterMappingException(string.Format(FilterMappingException.UnknownSortDirectionPattern, dto.Direction))
+            _ => throw new UnknownSortDirectionException(dto.Direction, dto.Field)
         };
 
         return new SortComponent(dto.Field, direction);
@@ -122,7 +123,7 @@ public partial class BasicFilterMapper : IMapFilters
         ValidatePaging(dto.Page, dto.PageSize);
         if (dto.RequestedFields.Length == 0)
         {
-            throw new FilterMappingException(FilterMappingException.EmptyRequestedFieldsPattern);
+            throw new EmptyRequestedFieldsException();
         }
         IFilter? filter = dto.Filter is not null ? ToFilter(dto.Filter) : null;
         SortComponent[] sorts = [.. dto.Sorts.Select(ToSortComponent)];
@@ -141,11 +142,11 @@ public partial class BasicFilterMapper : IMapFilters
     {
         if (page < 1)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidPagePattern, page));
+            throw new InvalidPageException(page);
         }
         if (pageSize < 1)
         {
-            throw new FilterMappingException(string.Format(FilterMappingException.InvalidPageSizePattern, pageSize));
+            throw new InvalidPageSizeException(pageSize);
         }
     }
 }
