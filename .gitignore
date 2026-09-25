@@ -9,6 +9,7 @@ node_modules/
 dist/
 .vite/
 
+[Tt]est[Rr]esult*/
 [Tt]est-[Rr]esult*/
 [Cc]overage-[Hh]istory/
 

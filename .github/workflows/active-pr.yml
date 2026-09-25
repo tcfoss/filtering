@@ -2,9 +2,23 @@ name: Pull Request
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, labeled, unlabeled, edited]
 
 jobs:
+
+  validate-work-items:
+    if: github.event.sender.type != 'Bot'
+    uses: tcfoss/github-actions/.github/workflows/validate-pr-work-items.yml@v1
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      pull-request-description: ${{ github.event.pull_request.body }}
+      api-url: ${{ vars.ISSUETRACKER_API_URL }}
+      target-status: Done
+    secrets:
+      issuetracker-api-token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
+
   lint:
     runs-on: ubuntu-latest
     permissions:
@@ -55,21 +69,39 @@ jobs:
           dotnet test "${{ matrix.project }}" \
             --no-build \
             --configuration Release \
-            --settings coverage.runsettings \
-            --collect "XPlat Code Coverage" \
             --results-directory TestResults
+
+      - name: Normalize coverage reports
+        run: |
+          mkdir -p CoverageResults
+          shopt -s globstar nullglob
+          files=(TestResults/**/*.cobertura.*.xml)
+          if (( ${#files[@]} == 0 )); then
+            echo "::error::No coverage reports found in TestResults"
+            exit 1
+          fi
+
+          index=0
+          for file in "${files[@]}"; do
+            index=$((index + 1))
+            cp "$file" "CoverageResults/coverage-unit-${index}.cobertura.xml"
+          done
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.name }}
-          path: TestResults/
+          path: CoverageResults/*.cobertura.xml
 
   integration-test:
-    if: startsWith(github.head_ref, 'release/')
+    if: >
+      startsWith(github.head_ref, 'release/') ||
+      contains(github.event.pull_request.labels.*.name, 'full-ci')
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      TESTCONTAINERS_RYUK_DISABLED: true
 
     steps:
       - uses: actions/checkout@v6
@@ -88,7 +120,30 @@ jobs:
         run: |
           dotnet test test/TcfOss.Filtering.Linq.IntegrationTests/TcfOss.Filtering.Linq.IntegrationTests.csproj \
             --no-build \
-            --configuration Release
+            --configuration Release \
+            --results-directory TestResults
+
+      - name: Normalize coverage reports
+        run: |
+          mkdir -p CoverageResults
+          shopt -s globstar nullglob
+          files=(TestResults/**/*.cobertura.*.xml)
+          if (( ${#files[@]} == 0 )); then
+            echo "::error::No coverage reports found in TestResults"
+            exit 1
+          fi
+
+          index=0
+          for file in "${files[@]}"; do
+            index=$((index + 1))
+            cp "$file" "CoverageResults/coverage-integration-${index}.cobertura.xml"
+          done
+
+      - name: Upload integration test coverage reports
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-integration
+          path: CoverageResults/*.cobertura.xml
 
   today:
     runs-on: ubuntu-latest
@@ -99,7 +154,7 @@ jobs:
         run: echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
 
   validate-release:
-    needs: today
+    needs: [today, validate-work-items]
     if: startsWith(github.head_ref, 'release/')
     uses: tcfoss/github-actions/.github/workflows/validate-release.yml@v1
     permissions:
@@ -109,11 +164,19 @@ jobs:
       branch: ${{ github.head_ref }}
       api-url: ${{ vars.ISSUETRACKER_API_URL }}
       release-date: ${{ needs.today.outputs.date }}
+      status: Released
+      work-item-status: Released
+      work-items-to-be-resolved: ${{ needs.validate-work-items.outputs.work-item-ids }}
+      release-date: ${{ needs.today.outputs.date }}
     secrets:
       issuetracker-api-token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
 
   coverage:
-    needs: unit-tests
+    needs: [unit-tests, integration-test]
+    if: >
+      always() &&
+      needs.unit-tests.result == 'success' &&
+      (needs.integration-test.result == 'success' || needs.integration-test.result == 'skipped')
     uses: tcfoss/github-actions/.github/workflows/coverage.yml@v1
     permissions:
       contents: read
