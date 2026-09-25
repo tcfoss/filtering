@@ -84,7 +84,7 @@ jobs:
           index=0
           for file in "${files[@]}"; do
             index=$((index + 1))
-            cp "$file" "CoverageResults/coverage-unit-${index}.cobertura.xml"
+            cp "$file" "CoverageResults/coverage-${{ matrix.name }}-${index}.cobertura.xml"
           done
 
       - name: Upload test results
