@@ -52,8 +52,7 @@ public class ValueManagerTests
         _ = valueManager.GetParameterIndex(value);
 
         ConstantExpression[] values = valueManager.GetValueExpressions();
-        Assert.Single(values);
-        ConstantExpression actualValue = values[0];
+        ConstantExpression actualValue = Assert.Single(values);
         Assert.Equal(expectedType, actualValue.Type);
         Assert.Equal(value, actualValue.Value);
     }
@@ -66,8 +65,7 @@ public class ValueManagerTests
         _ = valueManager.GetParameterIndex(value);
 
         ConstantExpression[] values = valueManager.GetValueExpressions();
-        Assert.Single(values);
-        ConstantExpression actualValue = values[0];
+        ConstantExpression actualValue = Assert.Single(values);
         Assert.Equal(expectedType, actualValue.Type);
         Assert.Equal(value, actualValue.Value);
     }
@@ -79,10 +77,10 @@ public class ValueManagerTests
         object unsupportedValue = new();
 
         valueManager.GetParameterIndex(unsupportedValue);
-        Assert.Throws<NotSupportedException>(() => valueManager.GetValueExpressions());
+        Assert.Throws<NotSupportedException>(valueManager.GetValueExpressions);
     }
 
-    class NonPrimitiveTestData : IEnumerable<TheoryDataRow<object, Type>>
+    private class NonPrimitiveTestData : IEnumerable<TheoryDataRow<object, Type>>
     {
         public IEnumerator<TheoryDataRow<object, Type>> GetEnumerator()
         {

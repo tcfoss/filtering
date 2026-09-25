@@ -4,7 +4,7 @@
     "Coverlet": {
       "format": "cobertura",
       "excludeByFile": "**/*.g.cs",
-      "exclude": "[System.Text.*]*,[Testcontainers*]*,[MySqlConnector*]*,[Docker.DotNet*]*,[*.Tests]*,[*.IntegrationTests]*,[*.Benchmarks]*,[TcfOss.DatabaseManager.Core*]*Errors.*",
+      "exclude": "[System.Text.*]*,[Testcontainers*]*,[MySqlConnector*]*,[Docker.DotNet*]*,[*.Tests]*,[*.IntegrationTests]*,[*.Benchmarks]*",
       "excludeByAttribute": "ExcludeFromCodeCoverage,GeneratedCode",
       "skipAutoProps": true
     }

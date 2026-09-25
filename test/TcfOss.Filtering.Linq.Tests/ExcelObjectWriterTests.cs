@@ -92,15 +92,15 @@ public class ExcelObjectWriterTests
         using Stream content = Write(s_rows.Take(1).AsQueryable());
         (_, List<List<string>> data) = ReadWrittenData(content, hasHeaders: false);
 
-        Assert.Single(data);
-        Assert.Equal("Alice", data[0][0]);  // string
-        Assert.Equal("30", data[0][1]);  // int
-        Assert.Equal("19.99", data[0][2]);  // decimal
-        Assert.Equal("1", data[0][3]);  // bool (written as "1"/"0")
+        List<string> singleRow = Assert.Single(data);
+        Assert.Equal("Alice", singleRow[0]);  // string
+        Assert.Equal("30", singleRow[1]);  // int
+        Assert.Equal("19.99", singleRow[2]);  // decimal
+        Assert.Equal("1", singleRow[3]);  // bool (written as "1"/"0")
         // DateTime and DateOnly are stored as OADate doubles, not formatted strings
-        Assert.Equal(new DateTime(2024, 1, 15, 10, 30, 0), DateTime.FromOADate(double.Parse(data[0][4])));
-        Assert.Equal(new DateOnly(2000, 5, 20), DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(data[0][5]))));
-        Assert.Equal("Some notes", data[0][6]);  // nullable string with value
+        Assert.Equal(new DateTime(2024, 1, 15, 10, 30, 0), DateTime.FromOADate(double.Parse(singleRow[4])));
+        Assert.Equal(new DateOnly(2000, 5, 20), DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(singleRow[5]))));
+        Assert.Equal("Some notes", singleRow[6]);  // nullable string with value
     }
 
     [Fact]
@@ -171,8 +171,8 @@ public class ExcelObjectWriterTests
 
         (_, List<List<string>> data) = ReadWrittenData(content, hasHeaders: false);
 
-        Assert.Single(data);
-        Assert.Equal("Alice", data[0][0]); // first row is data, not a header
+        List<string> singleRow = Assert.Single(data);
+        Assert.Equal("Alice", singleRow[0]); // first row is data, not a header
     }
 
     // -------------------------------------------------------------------------
@@ -290,10 +290,10 @@ public class ExcelObjectWriterTests
 
         Assert.NotNull(headers);
         Assert.Equal(["Name", "Department.Name", "Age"], headers);
-        Assert.Single(data);
-        Assert.Equal("Alice", data[0][0]);
-        Assert.Equal("Engineering", data[0][1]);
-        Assert.Equal("30", data[0][2]);
+        List<string> singleRow = Assert.Single(data);
+        Assert.Equal("Alice", singleRow[0]);
+        Assert.Equal("Engineering", singleRow[1]);
+        Assert.Equal("30", singleRow[2]);
     }
 
     // -------------------------------------------------------------------------
@@ -370,8 +370,8 @@ public class ExcelObjectWriterTests
             new SerializationOptions { IncludeHeaders = false });
 
         (_, List<List<string>> returnedData) = ReadWrittenData(returned, hasHeaders: false);
-        Assert.Single(returnedData);
-        Assert.Equal("Bob", returnedData[0][0]);
+        List<string> returnedLine = Assert.Single(returnedData);
+        Assert.Equal("Bob", returnedLine[0]);
 
         using MemoryStream provided = new();
         s_rows.AsQueryable().ToExcelStream(
@@ -385,7 +385,7 @@ public class ExcelObjectWriterTests
 
         provided.Position = 0;
         (_, List<List<string>> providedData) = ReadWrittenData(provided, hasHeaders: false);
-        Assert.Single(providedData);
-        Assert.Equal("Bob", providedData[0][0]);
+        List<string> providedLine = Assert.Single(providedData);
+        Assert.Equal("Bob", providedLine[0]);
     }
 }

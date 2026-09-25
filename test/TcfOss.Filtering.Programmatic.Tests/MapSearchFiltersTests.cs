@@ -82,9 +82,9 @@ public class MapSearchFiltersTests
 
         Assert.Equal(2, request.Page);
         Assert.Equal(25, request.PageSize);
-        Assert.Single(request.Sorts);
-        Assert.Equal("Name", request.Sorts[0].Field);
-        Assert.Equal(SortDirections.Descending, request.Sorts[0].Direction);
+        SortComponent singleSort = Assert.Single(request.Sorts);
+        Assert.Equal("Name", singleSort.Field);
+        Assert.Equal(SortDirections.Descending, singleSort.Direction);
     }
 
     [Fact]

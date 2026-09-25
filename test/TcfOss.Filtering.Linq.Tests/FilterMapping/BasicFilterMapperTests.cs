@@ -251,9 +251,9 @@ public class BasicFilterMapperTests
         Assert.Equal("Name", simpleFilter.Field);
         Assert.Equal("Smith", simpleFilter.Value);
 
-        Assert.Single(result.Sorts);
-        Assert.Equal("Age", result.Sorts[0].Field);
-        Assert.Equal(SortDirection.Descending, result.Sorts[0].Direction);
+        SortComponent singleSort = Assert.Single(result.Sorts);
+        Assert.Equal("Age", singleSort.Field);
+        Assert.Equal(SortDirection.Descending, singleSort.Direction);
 
         Assert.Equal(2, result.Page);
         Assert.Equal(50, result.PageSize);
@@ -274,9 +274,9 @@ public class BasicFilterMapperTests
 
         Assert.Null(result.Filter);
 
-        Assert.Single(result.Sorts);
-        Assert.Equal("Age", result.Sorts[0].Field);
-        Assert.Equal(SortDirection.Descending, result.Sorts[0].Direction);
+        SortComponent single = Assert.Single(result.Sorts);
+        Assert.Equal("Age", single.Field);
+        Assert.Equal(SortDirection.Descending, single.Direction);
 
         Assert.Equal(1, result.Page);
         Assert.Equal(20, result.PageSize);
@@ -303,9 +303,9 @@ public class BasicFilterMapperTests
         Assert.Equal("Name", simpleFilter.Field);
         Assert.Equal("Smith", simpleFilter.Value);
 
-        Assert.Single(result.Sorts);
-        Assert.Equal("Age", result.Sorts[0].Field);
-        Assert.Equal(SortDirection.Descending, result.Sorts[0].Direction);
+        SortComponent single = Assert.Single(result.Sorts);
+        Assert.Equal("Age", single.Field);
+        Assert.Equal(SortDirection.Descending, single.Direction);
 
         Assert.Equal(2, result.Page);
         Assert.Equal(50, result.PageSize);

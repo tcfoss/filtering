@@ -38,6 +38,7 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Converters = { new FilterConverter() },
     };
 
+    // ReSharper disable UnusedAutoPropertyAccessor.Local
     private record BookSummary
     {
         public required string Title { get; init; }
@@ -45,6 +46,7 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         public DateOnly? PurchaseDate { get; init; }
         public IEnumerable<string>? Authors { get; init; }
     }
+    // ReSharper enable UnusedAutoPropertyAccessor.Local
 
     private const string TestJson = """
     {
@@ -125,14 +127,14 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal(1, books.TotalCount);
         Book firstBook = books.Data.Single();
         Assert.Equal("Clean Code", firstBook.Title);
-        Assert.Single(firstBook.Authors);
-        Assert.Equal("Robert C. Martin", firstBook.Authors.First().Name);
+        Database.Entities.Author author = Assert.Single(firstBook.Authors);
+        Assert.Equal("Robert C. Martin", author.Name);
 
-        Assert.Single(firstBook.Genres);
-        Assert.Equal("Computer Science", firstBook.Genres.First().Name);
+        Genre genre = Assert.Single(firstBook.Genres);
+        Assert.Equal("Computer Science", genre.Name);
 
-        Assert.Single(firstBook.FullGenres);
-        Assert.Equal("Science & Technology › Computer Science", firstBook.FullGenres.First().Name);
+        FullGenre fullGenre = Assert.Single(firstBook.FullGenres);
+        Assert.Equal("Science & Technology › Computer Science", fullGenre.Name);
     }
 
     [Fact]
@@ -326,8 +328,8 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal(5, books.TotalCount);
 
         Assert.Equal("The Art of War", books.Data[0].Title);
-        Assert.Single(books.Data[0].FullGenres);
-        Assert.Equal("Non-Fiction › Philosophy", books.Data[0].FullGenres.First().Name);
+        FullGenre fisrtGenre = Assert.Single(books.Data[0].FullGenres);
+        Assert.Equal("Non-Fiction › Philosophy", fisrtGenre.Name);
 
         Assert.Equal("A Brief History of Time", books.Data[1].Title);
         Assert.Equal(2, books.Data[1].FullGenres.Count);
@@ -335,8 +337,8 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal("Non-Fiction › Science", books.Data[1].FullGenres.First(g => g.Name.Contains("Fiction")).Name);
 
         Assert.Equal("Flowers for Algernon", books.Data[2].Title);
-        Assert.Single(books.Data[2].FullGenres);
-        Assert.Equal("Fiction › Science Fiction", books.Data[2].FullGenres.First().Name);
+        FullGenre thirdBookGenre = Assert.Single(books.Data[2].FullGenres);
+        Assert.Equal("Fiction › Science Fiction", thirdBookGenre.Name);
 
         Assert.Equal("An Introduction to Algorithms", books.Data[3].Title);
         Assert.Equal(2, books.Data[3].FullGenres.Count);
@@ -344,8 +346,8 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal("Science & Technology › Mathematics", books.Data[3].FullGenres.First(g => g.Name.Contains("Mathematics")).Name);
 
         Assert.Equal("The Lean Startup", books.Data[4].Title);
-        Assert.Single(books.Data[4].FullGenres);
-        Assert.Equal("Non-Fiction", books.Data[4].FullGenres.First().Name);
+        FullGenre fifthBookGenre = Assert.Single(books.Data[4].FullGenres);
+        Assert.Equal("Non-Fiction", fifthBookGenre.Name);
     }
 
     [Fact]
@@ -397,9 +399,9 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
             .ApplyDataFilter(dataFilter)
             .ToListAsync(TestContext.Current.CancellationToken);
 
-        Assert.Single(bookTitles);
-        Assert.Equal("Clean Code", bookTitles[0].Title);
-        Assert.Equal("A Handbook of Agile Software Craftsmanship", bookTitles[0].Subtitle);
+        var singleBookTitle = Assert.Single(bookTitles);
+        Assert.Equal("Clean Code", singleBookTitle.Title);
+        Assert.Equal("A Handbook of Agile Software Craftsmanship", singleBookTitle.Subtitle);
     }
 
     [Fact]
@@ -509,14 +511,14 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal("The Lean Startup", result.Data[0].Title);
         Assert.NotNull(result.Data[0].Authors);
         var authors1 = result.Data[0].Authors!.ToList();
-        Assert.Single(authors1);
-        Assert.Equal("Eric Ries", authors1[0]);
+        string firstBookAuthor = Assert.Single(authors1);
+        Assert.Equal("Eric Ries", firstBookAuthor);
 
         Assert.Equal("The Art of War", result.Data[1].Title);
         Assert.NotNull(result.Data[1].Authors);
         var authors2 = result.Data[1].Authors!.ToList();
-        Assert.Single(authors2);
-        Assert.Equal("Sun Tzu", authors2[0]);
+        string secondBookAuthor = Assert.Single(authors2);
+        Assert.Equal("Sun Tzu", secondBookAuthor);
     }
 
     [Fact]
@@ -547,14 +549,14 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal("The Lean Startup", result.Data[0].Title);
         Assert.NotNull(result.Data[0].Authors);
         var authors1 = result.Data[0].Authors!.ToList();
-        Assert.Single(authors1);
-        Assert.Equal("Eric Ries", authors1[0]);
+        string firstBookAuthor = Assert.Single(authors1);
+        Assert.Equal("Eric Ries", firstBookAuthor);
 
         Assert.Equal("The Art of War", result.Data[1].Title);
         Assert.NotNull(result.Data[1].Authors);
         var authors2 = result.Data[1].Authors!.ToList();
-        Assert.Single(authors2);
-        Assert.Equal("Sun Tzu", authors2[0]);
+        string secondBookAuthor = Assert.Single(authors2);
+        Assert.Equal("Sun Tzu", secondBookAuthor);
     }
 
     [Fact]
@@ -607,8 +609,8 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
             .ApplyFiltering(filter, new ValueManager())
             .Select(b => b.Title)];
 
-        Assert.Single(viaDefaultManager);
-        Assert.Equal("Clean Code", viaDefaultManager[0]);
+        string singleTitle = Assert.Single(viaDefaultManager);
+        Assert.Equal("Clean Code", singleTitle);
         Assert.Equal(viaDefaultManager, viaExplicitManager);
     }
 
