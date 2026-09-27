@@ -20,26 +20,33 @@ jobs:
       issuetracker-api-token: ${{ secrets.ISSUETRACKER_API_TOKEN }}
 
   lint:
+    uses: tcfoss/github-actions/.github/workflows/dotnet-lint.yml@v1
+    permissions:
+      contents: read
+    with:
+      solution: Filtering.slnx
+
+  npm:
+    name: npm package
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
+    defaults:
+      run:
+        working-directory: npm/tcfoss-filtering-contracts
     steps:
       - uses: actions/checkout@v6
-
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-node@v6
         with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore
-        run: dotnet restore Filtering.slnx
-
-      - name: Lint
-        run: dotnet format Filtering.slnx --verify-no-changes --severity info --no-restore
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: npm/tcfoss-filtering-contracts/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
 
   unit-tests:
     name: Test (${{ matrix.name }})
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -48,102 +55,26 @@ jobs:
             project: test/TcfOss.Filtering.Linq.Tests/TcfOss.Filtering.Linq.Tests.csproj
           - name: Programmatic
             project: test/TcfOss.Filtering.Programmatic.Tests/TcfOss.Filtering.Programmatic.Tests.csproj
+    uses: tcfoss/github-actions/.github/workflows/dotnet-test.yml@v1
     permissions:
       contents: read
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore
-        run: dotnet restore Filtering.slnx
-
-      - name: Build
-        run: dotnet build Filtering.slnx --no-restore --configuration Release
-
-      - name: Test
-        run: |
-          dotnet test "${{ matrix.project }}" \
-            --no-build \
-            --configuration Release \
-            --results-directory TestResults
-
-      - name: Normalize coverage reports
-        run: |
-          mkdir -p CoverageResults
-          shopt -s globstar nullglob
-          files=(TestResults/**/*.cobertura.*.xml)
-          if (( ${#files[@]} == 0 )); then
-            echo "::error::No coverage reports found in TestResults"
-            exit 1
-          fi
-
-          index=0
-          for file in "${files[@]}"; do
-            index=$((index + 1))
-            cp "$file" "CoverageResults/coverage-${{ matrix.name }}-${index}.cobertura.xml"
-          done
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-${{ matrix.name }}
-          path: CoverageResults/*.cobertura.xml
+    with:
+      solution: Filtering.slnx
+      project: ${{ matrix.project }}
+      name: ${{ matrix.name }}
 
   integration-test:
     if: >
       startsWith(github.head_ref, 'release/') ||
       contains(github.event.pull_request.labels.*.name, 'full-ci')
-    runs-on: ubuntu-latest
+    uses: tcfoss/github-actions/.github/workflows/dotnet-test.yml@v1
     permissions:
       contents: read
-    env:
-      TESTCONTAINERS_RYUK_DISABLED: true
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore
-        run: dotnet restore Filtering.slnx
-
-      - name: Build
-        run: dotnet build Filtering.slnx --no-restore --configuration Release
-
-      - name: Integration test
-        run: |
-          dotnet test test/TcfOss.Filtering.Linq.IntegrationTests/TcfOss.Filtering.Linq.IntegrationTests.csproj \
-            --no-build \
-            --configuration Release \
-            --results-directory TestResults
-
-      - name: Normalize coverage reports
-        run: |
-          mkdir -p CoverageResults
-          shopt -s globstar nullglob
-          files=(TestResults/**/*.cobertura.*.xml)
-          if (( ${#files[@]} == 0 )); then
-            echo "::error::No coverage reports found in TestResults"
-            exit 1
-          fi
-
-          index=0
-          for file in "${files[@]}"; do
-            index=$((index + 1))
-            cp "$file" "CoverageResults/coverage-integration-${index}.cobertura.xml"
-          done
-
-      - name: Upload integration test coverage reports
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-integration
-          path: CoverageResults/*.cobertura.xml
+    with:
+      solution: Filtering.slnx
+      project: test/TcfOss.Filtering.Linq.IntegrationTests/TcfOss.Filtering.Linq.IntegrationTests.csproj
+      name: integration
+      integration: true
 
   today:
     runs-on: ubuntu-latest
