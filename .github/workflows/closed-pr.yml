@@ -64,7 +64,7 @@ jobs:
 
       - name: Tag release
         run: |
-          version="v${{ needs.parse-version.outputs.version }}"
+          version="${{ needs.parse-version.outputs.version }}"
           if [[ "${{ inputs.force-retag }}" == "true" ]]; then
             git push origin ":refs/tags/$version" || true
             git tag -d "$version" 2>/dev/null || true
@@ -100,7 +100,7 @@ jobs:
 
       - name: Pack
         run: |
-          version="v${{ needs.parse-version.outputs.version }}"
+          version="${{ needs.parse-version.outputs.version }}"
           projects=(
             "src/TcfOss.Filtering.Contracts/TcfOss.Filtering.Contracts.csproj"
             "src/TcfOss.Filtering.Contracts.Newtonsoft/TcfOss.Filtering.Contracts.Newtonsoft.csproj"
