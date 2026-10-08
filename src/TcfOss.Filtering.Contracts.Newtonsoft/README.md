@@ -1,5 +1,7 @@
 # TcfOss.Filtering.Contracts.Newtonsoft
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 Newtonsoft.Json support for `TcfOss.Filtering.Contracts` filter polymorphism.
 
 ## What this package adds
@@ -12,6 +14,6 @@ Add the converter to `JsonSerializerSettings` when using Newtonsoft.Json for req
 
 ## Related docs
 
-- [Utility extension packages](https://github.com/tcfoss/filtering/blob/master/docs/UtilityExtensionPackages.md)
-- [TcfOss.Filtering.Contracts](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Contracts/README.md)
+- [Utility extension packages](https://tcfoss.github.io/filtering/UtilityExtensionPackages/)
+- [TcfOss.Filtering.Contracts](https://tcfoss.github.io/filtering/packages/contracts/)
 - [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

@@ -7,9 +7,13 @@
         <Authors>Thomas C. Flanagan</Authors>
         <Company>TcfOss</Company>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/tcfoss/filtering</PackageProjectUrl>
+        <PackageProjectUrl>https://tcfoss.github.io/filtering/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tcfoss/filtering</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     </PropertyGroup>

@@ -1,0 +1,1 @@
+{% include-markdown "../../src/TcfOss.Filtering.AspNetCore/README.md" %}

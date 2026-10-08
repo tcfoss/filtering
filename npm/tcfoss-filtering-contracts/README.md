@@ -1,5 +1,7 @@
 # @tcfoss/filtering-contracts
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 TypeScript mirror of the `TcfOss.Filtering.Contracts` wire models and constants.
 
 ## Install
@@ -36,5 +38,5 @@ const request: DataRequest = {
 
 ## Related docs
 
-- [../../docs/ContractKeys.md](../../docs/ContractKeys.md)
-- [../../README.md](../../README.md)
+- [Contract keys](https://tcfoss.github.io/filtering/ContractKeys/)
+- [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

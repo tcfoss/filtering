@@ -1,5 +1,7 @@
 # TcfOss.Filtering.Programmatic
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 Filter objects for use in strongly-typed C# code, and helpers for converting them to `TcfOss.Filtering.Contracts` wire models.
 
 These may be useful for, say, filter components in a Blazor or WPF application, where you want to construct filter objects in code and then send them to an API that uses `TcfOss.Filtering.Contracts` wire models, or the wire models may be simply mapped to `TcfOss.Filtering.Linq` models in the same application

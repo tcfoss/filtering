@@ -105,7 +105,7 @@ Full API reference: [references/exporting.md](./references/exporting.md)
 ```csharp
 // CSV, synchronous
 Stream csv = dbContext.Employees.ToCsvStream(filter, sorts, maxRows: 10_000);
-n
+
 // XLSX, synchronous (mirrors CSV API)
 Stream xlsx = dbContext.Employees.ToExcelStream(filter, sorts, maxRows: 10_000);
 

@@ -1,5 +1,7 @@
 # TcfOss.Filtering.EntityFrameworkCore
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 EF Core integration helpers for `TcfOss.Filtering.Linq`.
 
 ## What this package adds
@@ -24,6 +26,6 @@ Contracts.DataResult<Employee> result = await dbContext.Employees
 
 ## Related packages
 
-- [TcfOss.Filtering.Linq](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Linq/README.md)
-- [Utility extension packages](https://github.com/tcfoss/filtering/blob/master/docs/UtilityExtensionPackages.md)
+- [TcfOss.Filtering.Linq](https://tcfoss.github.io/filtering/packages/linq/)
+- [Utility extension packages](https://tcfoss.github.io/filtering/UtilityExtensionPackages/)
 - [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

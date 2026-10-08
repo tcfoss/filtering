@@ -1,5 +1,7 @@
 # TcfOss.Filtering.Linq
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 Dynamic LINQ query composition for filtering, sorting, paging, and dynamic field selection.
 
 ## What this package does
@@ -26,7 +28,7 @@ When handling untrusted input, map via a mapper (`ReflectionFilterMapper<T>`, `D
 
 ## Related docs
 
-- [Request mapping](https://github.com/tcfoss/filtering/blob/master/docs/RequestMapping.md)
-- [Contract keys](https://github.com/tcfoss/filtering/blob/master/docs/ContractKeys.md)
-- [TcfOss.Filtering.EntityFrameworkCore](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.EntityFrameworkCore/README.md)
+- [Request mapping](https://tcfoss.github.io/filtering/RequestMapping/)
+- [Contract keys](https://tcfoss.github.io/filtering/ContractKeys/)
+- [TcfOss.Filtering.EntityFrameworkCore](https://tcfoss.github.io/filtering/packages/entity-framework-core/)
 - [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

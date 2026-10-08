@@ -1,5 +1,7 @@
 # TcfOss.Filtering
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 Monorepo containing filtering, sorting, paging, and export libraries for .NET and TypeScript.
 
 Use this README as an index. Package-level usage and examples live in each package README.
@@ -27,17 +29,23 @@ Use this README as an index. Package-level usage and examples live in each packa
 
 ## Docs
 
-- [docs/ContractKeys.md](docs/ContractKeys.md)
-- [docs/RequestMapping.md](docs/RequestMapping.md)
-- [docs/ExportingData.md](docs/ExportingData.md)
-- [docs/UtilityExtensionPackages.md](docs/UtilityExtensionPackages.md)
+- [Contract keys](https://tcfoss.github.io/filtering/ContractKeys/)
+- [Request mapping](https://tcfoss.github.io/filtering/RequestMapping/)
+- [Exporting data](https://tcfoss.github.io/filtering/ExportingData/)
+- [Utility extension packages](https://tcfoss.github.io/filtering/UtilityExtensionPackages/)
+- [Contributing and development](https://tcfoss.github.io/filtering/development/)
+- [Documentation maintenance](https://tcfoss.github.io/filtering/development/documentation/)
+- [Release workflow](https://tcfoss.github.io/filtering/development/ReleaseWorkflow/)
 
 ## Quick Start
 
 ```bash
-dotnet build
-dotnet test
+dotnet build Filtering.slnx
+dotnet test --project test/TcfOss.Filtering.Linq.Tests/TcfOss.Filtering.Linq.Tests.csproj
+dotnet test --project test/TcfOss.Filtering.Programmatic.Tests/TcfOss.Filtering.Programmatic.Tests.csproj
 ```
+
+See [contributing and development](https://tcfoss.github.io/filtering/development/) for integration-test prerequisites, TypeScript commands, and formatting guidance.
 
 ## How It Fits Together
 
