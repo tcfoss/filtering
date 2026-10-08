@@ -11,7 +11,7 @@ deserialization exceptions, without manual fiddling, would result in a `500 Inte
 app.UseFilterDeserializationExceptionHandler();
 ```
 
-The response body is `{ "error": "<message>" }`. This package has no dependency on Newtonsoft.Json.
+The response body is `{ "error": "<message>" }`.
 
 
 ## TcfOss.Filtering.EntityFrameworkCore
@@ -30,7 +30,7 @@ DataResult<dynamic> result = await dbContext.Employees
     .ToDataResultAsync(dynamicDataRequest, cancellationToken);
 ```
 
-Both overloads also accept an explicit `IManageValues` as a third argument. Requires EF Core 9 or 10.
+Both overloads also accept an explicit `IManageValues` as a third argument. Requires EF Core 9+.
 
 When composing queries, import only one queryable namespace per file:
 

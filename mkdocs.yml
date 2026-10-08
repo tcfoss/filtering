@@ -1,0 +1,59 @@
+site_name: TcfOss.Filtering
+site_description: Filtering, sorting, paging, and CSV/XLSX export libraries for .NET and TypeScript.
+site_url: https://tcfoss.github.io/filtering/
+repo_url: https://github.com/tcfoss/filtering
+repo_name: tcfoss/filtering
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+
+plugins:
+  - search
+  - include-markdown
+
+nav:
+  - Home: index.md
+  - Package Usage:
+    - Contracts: packages/contracts.md
+    - LINQ: packages/linq.md
+    - Entity Framework Core: packages/entity-framework-core.md
+    - CSV Export: packages/csv-output.md
+    - Excel Export: packages/xlsx-output.md
+    - Newtonsoft.Json: packages/contracts-newtonsoft.md
+    - ASP.NET Core: packages/aspnetcore.md
+    - Programmatic Filters: packages/programmatic.md
+    - TypeScript Contracts: packages/typescript-contracts.md
+  - Guides:
+    - Filter Transformations: FilterTransformations.md
+    - Request Mapping: RequestMapping.md
+    - Exporting Data: ExportingData.md
+    - Utility Packages: UtilityExtensionPackages.md
+  - Reference:
+    - Contract Keys: ContractKeys.md
+  - AI Skill:
+    - Filtering Skill: skills/tcfoss-filtering/SKILL.md
+    - Contract Keys: skills/tcfoss-filtering/references/contract-keys.md
+    - Exporting: skills/tcfoss-filtering/references/exporting.md
+  - Contributing:
+    - Getting Started: development/index.md
+    - Documentation: development/documentation.md
+    - Releases: development/ReleaseWorkflow.md
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    unrecognized_links: warn
+    anchors: warn

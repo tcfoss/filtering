@@ -1,5 +1,7 @@
 # TcfOss.Filtering.AspNetCore
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 ASP.NET Core middleware helpers for handling malformed filter payloads.
 
 ## What this package adds
@@ -12,6 +14,6 @@ Register the middleware in your ASP.NET Core pipeline where you handle request e
 
 ## Related docs
 
-- [Utility extension packages](https://github.com/tcfoss/filtering/blob/master/docs/UtilityExtensionPackages.md)
-- [TcfOss.Filtering.Contracts](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Contracts/README.md)
+- [Utility extension packages](https://tcfoss.github.io/filtering/UtilityExtensionPackages/)
+- [TcfOss.Filtering.Contracts](https://tcfoss.github.io/filtering/packages/contracts/)
 - [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

@@ -2,6 +2,16 @@
   "name": "@tcfoss/filtering-contracts",
   "version": "0.0.1",
   "description": "Shared filter/sort/paging contract types for TcfOss.Filtering backends",
+  "homepage": "https://tcfoss.github.io/filtering/",
+  "keywords": [
+    "filtering",
+    "sorting",
+    "paging",
+    "typescript",
+    "contracts",
+    "dotnet",
+    "zod"
+  ],
   "license": "MIT",
   "type": "module",
   "publishConfig": {

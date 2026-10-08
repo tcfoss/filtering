@@ -1,5 +1,7 @@
 # TcfOss.Filtering.CsvOutput
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 CSV export extensions for filtered/sorted `IQueryable<T>` data.
 
 ## What this package adds
@@ -22,6 +24,6 @@ using Stream csv = query.ToCsvStream(filter, sorts, maxRows: 1000, parsingConfig
 
 ## Related docs
 
-- [Exporting data](https://github.com/tcfoss/filtering/blob/master/docs/ExportingData.md)
-- [TcfOss.Filtering.Linq](https://github.com/tcfoss/filtering/blob/master/src/TcfOss.Filtering.Linq/README.md)
+- [Exporting data](https://tcfoss.github.io/filtering/ExportingData/)
+- [TcfOss.Filtering.Linq](https://tcfoss.github.io/filtering/packages/linq/)
 - [Repository README](https://github.com/tcfoss/filtering/blob/master/README.md)

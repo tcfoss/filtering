@@ -1,5 +1,7 @@
 # Demo
 
+[Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
+
 A minimal working example showing the full stack: TypeScript frontend → ASP.NET Core API → in-memory LINQ query.
 
 ## Running
