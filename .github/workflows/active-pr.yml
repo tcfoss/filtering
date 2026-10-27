@@ -96,9 +96,7 @@ jobs:
       name: ${{ matrix.name }}
 
   integration-test:
-    if: >
-      startsWith(github.head_ref, 'release/') ||
-      contains(github.event.pull_request.labels.*.name, 'full-ci')
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'unit-test-only') }}
     uses: tcfoss/github-actions/.github/workflows/dotnet-test.yml@v1
     permissions:
       contents: read
