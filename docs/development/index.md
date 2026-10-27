@@ -51,8 +51,8 @@ With that Docker environment available, run every test project in the solution:
 dotnet test --solution Filtering.slnx
 ```
 
-Pull requests run the two unit-test projects. Integration tests also run for release branches
-or pull requests labeled `full-ci`.
+Pull requests run the two unit-test projects and integration tests by default.
+Add the `unit-test-only` label to skip integration tests.
 
 
 ## TypeScript Contracts

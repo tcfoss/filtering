@@ -1,5 +1,8 @@
 # TcfOss.Filtering
 
+[![codecov](https://codecov.io/gh/tcfoss/filtering/graph/badge.svg?token=MLEAN365EX)](https://codecov.io/gh/tcfoss/filtering)
+
+
 [Documentation](https://tcfoss.github.io/filtering/) | [Repository](https://github.com/tcfoss/filtering)
 
 Monorepo containing filtering, sorting, paging, and export libraries for .NET and TypeScript.
