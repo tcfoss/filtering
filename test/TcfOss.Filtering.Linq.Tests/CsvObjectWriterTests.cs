@@ -478,4 +478,69 @@ public class CsvObjectWriterTests
         Assert.Throws<ArgumentNullException>(() =>
             query.ToCsvStream(new MemoryStream(), null, null, null, new ValueManager(), System.Linq.Dynamic.Core.ParsingConfig.Default, null!));
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void ToCsvStream_ReturnedConvenienceOverloads_ForwardQueryAndOptions(int overload)
+    {
+        Row[] rows =
+        [
+            new("Alice", 30, 0m, true, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null),
+            new("Bob", 25, 0m, false, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null),
+            new("Charlie", 20, 0m, true, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null)
+        ];
+        var query = rows.AsQueryable();
+        var filter = new SimpleFilter("Age", QueryOperator.GreaterThan, 24);
+        SortComponent[] sorts = [new("Age", SortDirection.Ascending)];
+
+        using Stream stream = overload switch
+        {
+            0 => query.ToCsvStream(filter, sorts, 1, new SerializationOptions { IncludeHeaders = false }),
+            1 => query.ToCsvStream(filter, sorts, 1),
+            _ => query.ToCsvStream(filter, sorts, 1, System.Linq.Dynamic.Core.ParsingConfig.Default)
+        };
+
+        Assert.Equal(0, stream.Position);
+        string[] lines = Lines(ReadAll(stream));
+        Assert.Equal(overload == 0 ? 1 : 2, lines.Length);
+        Assert.StartsWith("Bob,25,", lines[^1]);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void ToCsvStream_ProvidedConvenienceOverloads_ForwardQueryAndOptions(int overload)
+    {
+        Row[] rows =
+        [
+            new("Alice", 30, 0m, true, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null),
+            new("Bob", 25, 0m, false, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null),
+            new("Charlie", 20, 0m, true, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null)
+        ];
+        var query = rows.AsQueryable();
+        var filter = new SimpleFilter("Age", QueryOperator.GreaterThan, 24);
+        SortComponent[] sorts = [new("Age", SortDirection.Ascending)];
+        using MemoryStream stream = new();
+
+        switch (overload)
+        {
+            case 0:
+                query.ToCsvStream(stream, filter, sorts, 1, System.Linq.Dynamic.Core.ParsingConfig.Default);
+                break;
+            case 1:
+                query.ToCsvStream(stream, filter, sorts, 1, new SerializationOptions { IncludeHeaders = false });
+                break;
+            default:
+                query.ToCsvStream(stream, filter, sorts, 1);
+                break;
+        }
+
+        Assert.True(stream.CanRead);
+        string[] lines = Lines(ReadAll(stream));
+        Assert.Equal(overload == 1 ? 1 : 2, lines.Length);
+        Assert.StartsWith("Bob,25,", lines[^1]);
+    }
 }

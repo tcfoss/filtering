@@ -26,6 +26,7 @@ public class ExcelWriterTests
     private sealed class TestableExcelWriter(Stream stream, SerializationOptions options) : ExcelWriter(stream, options)
     {
         public void WriteCellDirect(object value) => WriteCell(value);
+        public void WriteOtherValueDirect(object value) => WriteCellOther(value);
     }
 
     private static string[] GetSharedStrings(WorkbookPart workbookPart)
@@ -158,6 +159,24 @@ public class ExcelWriterTests
         List<Cell> cells = GetCells(doc.WorkbookPart!, worksheetIndex: 0, rowIndex: 1);
 
         Assert.All(cells, cell => Assert.Equal("N/A", sharedStrings[int.Parse(cell.CellValue!.Text)]));
+    }
+
+    [Fact]
+    public void WriteOtherValueDirect_NullToString_WritesConfiguredBlankValue()
+    {
+        using MemoryStream stream = new();
+        using (var writer = new TestableExcelWriter(stream, new SerializationOptions { BlankValue = "N/A" }))
+        {
+            writer.WriteOtherValueDirect(new NullTextValue());
+        }
+
+        stream.Position = 0;
+        using SpreadsheetDocument doc = SpreadsheetDocument.Open(stream, false);
+        using Stream worksheetStream = doc.WorkbookPart!.WorksheetParts.Single().GetStream();
+        var worksheet = System.Xml.Linq.XDocument.Load(worksheetStream);
+        var value = Assert.Single(worksheet.Descendants(System.Xml.Linq.XName.Get("v", "http://schemas.openxmlformats.org/spreadsheetml/2006/main")));
+
+        Assert.Equal("N/A", value.Value);
     }
 
     [Fact]

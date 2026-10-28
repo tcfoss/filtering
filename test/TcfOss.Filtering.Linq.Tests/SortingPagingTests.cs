@@ -144,4 +144,28 @@ public class SortingPagingTests
 
         Assert.Equal(["Alice", "Bob", "Charlie"], result.Select(r => r.Title));
     }
+
+    [Fact]
+    public void DataRequestConvenienceOverloads_ForwardFilterSortingPagingAndTotalCount()
+    {
+        IQueryable<TestData.Person> query = TestData.People.AsQueryable();
+        var request = new DataRequest
+        {
+            Filter = new SimpleFilter("Age", QueryOperator.GreaterThan, 28),
+            Sorts = [new SortComponent("Name", SortDirection.Descending)],
+            Page = 2,
+            PageSize = 3
+        };
+        TestData.Person[] expectedSortedPage = [.. TestData.People.OrderByDescending(person => person.Name).Skip(3).Take(3)];
+        TestData.Person[] matching = [.. TestData.People.Where(person => person.Age > 28)];
+        TestData.Person[] expectedFilteredPage = [.. matching.OrderByDescending(person => person.Name).Skip(3).Take(3)];
+
+        Assert.Equal(expectedSortedPage, query.ApplyPagingAndSorting(request).ToArray());
+        Assert.Equal(expectedFilteredPage, query.ApplyDataFilter(request, new ValueManager()).ToArray());
+
+        Contracts.DataResult<TestData.Person> result = query.ToDataResult(request, new ValueManager());
+
+        Assert.Equal(matching.Length, result.TotalCount);
+        Assert.Equal(expectedFilteredPage, result.Data);
+    }
 }

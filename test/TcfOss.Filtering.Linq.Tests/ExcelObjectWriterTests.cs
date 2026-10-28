@@ -486,4 +486,74 @@ public class ExcelObjectWriterTests
         List<string> providedLine = Assert.Single(providedData);
         Assert.Equal("Bob", providedLine[0]);
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void ToExcelStream_UnfilteredConvenienceOverloads_ForwardHeadersAndRows(int overload)
+    {
+        var query = s_rows.Take(1).AsQueryable();
+        using Stream stream = overload switch
+        {
+            0 => query.ToExcelStream(),
+            1 => query.ToExcelStream(new SerializationOptions { IncludeHeaders = false }),
+            _ => new MemoryStream()
+        };
+        if (overload == 2)
+        {
+            query.ToExcelStream(stream);
+        }
+        else
+        {
+            Assert.Equal(0, stream.Position);
+        }
+
+        stream.Position = 0;
+        (List<string>? headers, List<List<string>> data) = ReadWrittenData(stream, hasHeaders: overload != 1);
+
+        Assert.Equal("Alice", Assert.Single(data)[0]);
+        if (overload == 1)
+        {
+            Assert.Null(headers);
+        }
+        else
+        {
+            Assert.Equal(["Name", "Age", "Balance", "IsActive", "CreatedAt", "BirthDate", "Notes"], headers);
+        }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void ToExcelStream_FilteredConvenienceOverloads_ForwardQueryAndOptions(int overload)
+    {
+        var query = s_rows.AsQueryable();
+        var filter = new SimpleFilter("Age", QueryOperator.LessThan, 35);
+        SortComponent[] sorts = [new("Age", SortDirection.Ascending)];
+        using Stream stream = overload switch
+        {
+            0 => query.ToExcelStream(filter, sorts, 1, System.Linq.Dynamic.Core.ParsingConfig.Default),
+            1 => query.ToExcelStream(filter, sorts, 1),
+            2 => query.ToExcelStream(filter, sorts, 1, new SerializationOptions { IncludeHeaders = false }),
+            _ => new MemoryStream()
+        };
+        if (overload == 3)
+        {
+            query.ToExcelStream(stream, filter, sorts, 1);
+        }
+        else
+        {
+            Assert.Equal(0, stream.Position);
+        }
+
+        stream.Position = 0;
+        (_, List<List<string>> data) = ReadWrittenData(stream, hasHeaders: overload != 2);
+
+        List<string> row = Assert.Single(data);
+        Assert.Equal("Bob", row[0]);
+        Assert.Equal("25", row[1]);
+    }
 }

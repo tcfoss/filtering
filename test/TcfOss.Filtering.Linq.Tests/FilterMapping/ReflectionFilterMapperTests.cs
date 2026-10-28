@@ -389,6 +389,110 @@ public class ReflectionFilterMapperTests
     }
 
     [Fact]
+    public void PreserveNullability_UnknownRoot_ReportsFullPath()
+    {
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() =>
+            typeof(Person).GetPropertyTypePreserveNullability("Nonexistent.Count"));
+
+        Assert.Equal("Nonexistent.Count", ex.FieldName);
+    }
+
+    [Theory]
+    [InlineData("Name")]
+    [InlineData("name")]
+    public void RequestedField_KnownField_PreservesRequestedName(string field)
+    {
+        Assert.Equal(field, _mapper.ToRequestedField(field));
+    }
+
+    [Theory]
+    [InlineData("Nonexistent")]
+    [InlineData("Nonexistent.Count")]
+    public void RequestedField_UnknownField_Throws(string field)
+    {
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => _mapper.ToRequestedField(field));
+
+        Assert.Equal(field, ex.FieldName);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RequestedField_DisallowedField_ThrowsEvenWithCachedParser(bool useWhitelist)
+    {
+        Assert.Equal("Name", _mapper.ToRequestedField("Name"));
+        var mapper = useWhitelist
+            ? new ReflectionFilterMapper<Person>(whitelist: ["BirthYear"])
+            : new ReflectionFilterMapper<Person>(blacklist: ["Name"]);
+
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToRequestedField("Name"));
+
+        Assert.Equal("Name", ex.FieldName);
+    }
+
+    [Theory]
+    [InlineData(QuantifiedOperators.Any)]
+    [InlineData(QuantifiedOperators.All)]
+    public void QuantifiedFilter_AllowedCollection_MapsFlagsAndSubfilter(string op)
+    {
+        var mapper = new ReflectionFilterMapper<TestData.Person>(whitelist: ["Friends", "Name"]);
+        var dto = new Contracts.QuantifiedFilter
+        {
+            Field = "Friends",
+            Operator = op,
+            SubFilter = new Contracts.SimpleFilter("Name", FilterOperators.EqualTo, "Alice"),
+            IsNegated = true,
+            IsNullable = true
+        };
+
+        QuantifiedFilter result = mapper.ToFilter(dto);
+
+        Assert.Equal("Friends", result.FieldName);
+        Assert.Equal(op == QuantifiedOperators.Any ? QuantifiedOperator.Any : QuantifiedOperator.All, result.QuantifiedOperator);
+        Assert.True(result.IsNegated);
+        Assert.True(result.IsNullable);
+        SimpleFilter subfilter = Assert.IsType<SimpleFilter>(result.SubFilter);
+        Assert.Equal("Name", subfilter.Field);
+        Assert.Equal("Alice", subfilter.Value);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void QuantifiedFilter_DisallowedCollection_Throws(bool useWhitelist)
+    {
+        var mapper = useWhitelist
+            ? new ReflectionFilterMapper<TestData.Person>(whitelist: ["Name"])
+            : new ReflectionFilterMapper<TestData.Person>(blacklist: ["Friends"]);
+        var dto = new Contracts.QuantifiedFilter
+        {
+            Field = "Friends",
+            Operator = QuantifiedOperators.Any,
+            SubFilter = new Contracts.SimpleFilter("Name", FilterOperators.EqualTo, "Alice")
+        };
+
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
+
+        Assert.Equal("Friends", ex.FieldName);
+    }
+
+    [Fact]
+    public void QuantifiedFilter_UnknownCollection_Throws()
+    {
+        var mapper = new ReflectionFilterMapper<TestData.Person>();
+        var dto = new Contracts.QuantifiedFilter
+        {
+            Field = "Nonexistent",
+            Operator = QuantifiedOperators.Any,
+            SubFilter = new Contracts.SimpleFilter("Name", FilterOperators.EqualTo, "Alice")
+        };
+
+        UnknownFieldException ex = Assert.Throws<UnknownFieldException>(() => mapper.ToFilter(dto));
+
+        Assert.Equal("Nonexistent", ex.FieldName);
+    }
+
+    [Fact]
     public void DottedCountField_UnknownRoot_ThrowsFilterMappingException()
     {
         var dto = new Contracts.SimpleFilter("Nonexistent.Count", FilterOperators.GreaterThan, "0");
@@ -954,6 +1058,19 @@ public class ReflectionFilterMapperTests
         InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
         Assert.Contains("BirthYear", ex.Message);
         Assert.Contains("bad", ex.Message);
+        Assert.Equal("BirthYear", ex.FieldName);
+        Assert.Equal("bad", ex.Value);
+        Assert.IsType<FormatException>(ex.InnerException);
+    }
+
+    [Fact]
+    public void RangeFilter_InvalidValueTo_ThrowsFilterMappingException()
+    {
+        var mapper = new ReflectionFilterMapper<Person>();
+        var dto = new Contracts.RangeFilter("BirthYear", "1990", "bad");
+
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
+
         Assert.Equal("BirthYear", ex.FieldName);
         Assert.Equal("bad", ex.Value);
         Assert.IsType<FormatException>(ex.InnerException);
