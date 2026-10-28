@@ -115,4 +115,33 @@ public class MapSearchFiltersTests
         Assert.Equal(FilterOperators.EqualTo, simpleFilter.Operator);
         Assert.Equal("Engineering", simpleFilter.Value);
     }
+
+    [Fact]
+    public void ConstructDynamicDataRequest_UsesProvidedPagingAndSorts()
+    {
+        string[] requested = ["Name"];
+        SearchFilter[] filters =
+        [
+            new SearchFilter<string>("Name") { Value = "Alice" }
+        ];
+        SortComponent[] sorts =
+        [
+            new("Name", SortDirections.Descending)
+        ];
+
+        DynamicDataRequest request = MapSearchFilters.ConstructDynamicDataRequest(
+            requested,
+            filters,
+            sorts,
+            page: 2,
+            pageSize: 25,
+            new MappingOptions());
+
+        Assert.Equal(requested, request.RequestedFields);
+        Assert.Equal(2, request.Page);
+        Assert.Equal(25, request.PageSize);
+        SortComponent singleSort = Assert.Single(request.Sorts);
+        Assert.Equal("Name", singleSort.Field);
+        Assert.Equal(SortDirections.Descending, singleSort.Direction);
+    }
 }

@@ -1,6 +1,8 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core.CustomTypeProviders;
 using Newtonsoft.Json;
 using TcfOss.Filtering.Contracts.Newtonsoft;
 using TcfOss.Filtering.EntityFrameworkCore.Queryable;
@@ -167,6 +169,33 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
     }
 
     [Fact]
+    public async Task DynamicRequestedNestedField_PreservesDottedName()
+    {
+        LibraryDbContext context = CreateContext();
+        var query = context.Books
+            .Select(book => new
+            {
+                book.Title,
+                Details = new { book.Subtitle }
+            })
+            .AsNoTracking();
+        var dataFilter = new DynamicDataRequest
+        {
+            RequestedFields = ["Title", "Details.Subtitle"],
+            Sorts = [new SortComponent("Title", SortDirection.Ascending)],
+            Page = 1,
+            PageSize = 10
+        };
+
+        Contracts.DataResult<dynamic> result = await query.ToDataResultAsync(dataFilter, TestContext.Current.CancellationToken);
+
+        IDictionary<string, object> cleanCode = Assert.Single(result.Data, row => (string)row.Title == "Clean Code");
+        Assert.Equal("Details.Subtitle", Assert.Single(cleanCode.Keys, key => key.Contains('.')));
+        string? expectedSubtitle = context.Books.Where(book => book.Title == "Clean Code").Select(book => book.Subtitle).Single();
+        Assert.Equal(expectedSubtitle, cleanCode["Details.Subtitle"]);
+    }
+
+    [Fact]
     public async Task Filter_Like()
     {
         LibraryDbContext context = CreateContext();
@@ -190,6 +219,19 @@ public class MariaDbQueryTests(MariaDbFixture_11_08_06 fixture)
         Assert.Equal(2, books.TotalCount);
         Assert.Equal("The Name of the Wind", books.Data[0].Title);
         Assert.Equal("The Shadow of the Wind", books.Data[1].Title);
+    }
+
+    [Fact]
+    public void LikeOperator_WithPartialCustomProvider_ThrowsClearException()
+    {
+        ParsingConfig parsingConfig = new();
+        parsingConfig.CustomTypeProvider = new DefaultDynamicLinqCustomTypeProvider(parsingConfig, [typeof(EF)]);
+        var filter = new SimpleFilter("Title", QueryOperator.Like, "the%of%wind");
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            Queryable.LinqQueryableExtensions.ApplyFiltering(Array.Empty<Book>().AsQueryable(), filter, new ValueManager(), parsingConfig));
+
+        Assert.Contains("registers EF and DbFunctionsExtensions", ex.Message);
     }
 
     [Fact]

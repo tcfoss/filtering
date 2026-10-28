@@ -43,6 +43,7 @@ public class ReflectionFilterMapperTests
     private record Location(string City, string Country);
     private record Office(string Building, Location Location);
     private record Company(string Name, int Revenue, Office HeadOffice);
+    private record ArrayContainer(int[] Values);
 
     // ReSharper restore ClassNeverInstantiated.Local
     // ReSharper restore NotAccessedPositionalProperty.Local
@@ -353,6 +354,41 @@ public class ReflectionFilterMapperTests
     }
 
     [Fact]
+    public void ArrayLengthField_ResolvesAsInt()
+    {
+        Type type = typeof(ArrayContainer);
+
+        Assert.Equal(typeof(int), type.GetPropertyType("Values.Length"));
+        Assert.Equal(typeof(int), type.GetPropertyTypePreserveNullability("Values.Length"));
+    }
+
+    [Fact]
+    public void NestedPropertyPath_ResolvesAcrossObjects()
+    {
+        Type type = typeof(Company);
+
+        Assert.Equal(typeof(string), type.GetPropertyType("HeadOffice.Location.City"));
+        Assert.Equal(typeof(string), type.GetPropertyTypePreserveNullability("HeadOffice.Location.City"));
+    }
+
+    [Fact]
+    public void CollectionLengthOnList_ThrowsUnknownField()
+    {
+        Type type = typeof(TestData.Person);
+
+        Assert.Throws<UnknownFieldException>(() => type.GetPropertyType("Friends.Length"));
+        Assert.Throws<UnknownFieldException>(() => type.GetPropertyTypePreserveNullability("Friends.Length"));
+    }
+
+    [Fact]
+    public void CollectionItemNavigation_ThrowsUnsupportedNavigation()
+    {
+        Type type = typeof(TestData.Person);
+
+        Assert.Throws<UnsupportedCollectionNavigationException>(() => type.GetPropertyTypePreserveNullability("Friends.Name"));
+    }
+
+    [Fact]
     public void DottedCountField_UnknownRoot_ThrowsFilterMappingException()
     {
         var dto = new Contracts.SimpleFilter("Nonexistent.Count", FilterOperators.GreaterThan, "0");
@@ -408,6 +444,15 @@ public class ReflectionFilterMapperTests
         UnsupportedFieldTypeException ex = Assert.Throws<UnsupportedFieldTypeException>(() => typeof(object).ConstructValueParser("Field"));
         Assert.Contains("Field", ex.Message);
         Assert.Equal("Field", ex.FieldName);
+        Assert.Equal("Object", ex.FieldType);
+    }
+
+    [Fact]
+    public void GetValueParser_UnsupportedTypeWithoutFieldName_UsesUnknownName()
+    {
+        UnsupportedFieldTypeException ex = Assert.Throws<UnsupportedFieldTypeException>(() => typeof(object).ConstructValueParser(null));
+
+        Assert.Equal("unknown", ex.FieldName);
         Assert.Equal("Object", ex.FieldType);
     }
 
@@ -473,6 +518,30 @@ public class ReflectionFilterMapperTests
         Assert.Contains("MiddleInitial", ex.Message);
         Assert.Equal("MiddleInitial", ex.FieldName);
         Assert.Equal("AB", ex.Value);
+        Assert.IsType<FormatException>(ex.InnerException);
+    }
+
+    [Fact]
+    public void Set_InvalidInt_ThrowsFilterMappingException()
+    {
+        var mapper = new ReflectionFilterMapper<Person>();
+        var dto = new Contracts.SetFilter("Age", ["not-an-int"]);
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
+        Assert.Contains("Age", ex.Message);
+        Assert.Equal("Age", ex.FieldName);
+        Assert.Equal("not-an-int", ex.Value);
+        Assert.IsType<FormatException>(ex.InnerException);
+    }
+
+    [Fact]
+    public void Range_InvalidInt_ThrowsFilterMappingException()
+    {
+        var mapper = new ReflectionFilterMapper<Person>();
+        var dto = new Contracts.RangeFilter("Age", "not-an-int", "100");
+        InvalidValueException ex = Assert.Throws<InvalidValueException>(() => mapper.ToFilter(dto));
+        Assert.Contains("Age", ex.Message);
+        Assert.Equal("Age", ex.FieldName);
+        Assert.Equal("not-an-int", ex.Value);
         Assert.IsType<FormatException>(ex.InnerException);
     }
 
