@@ -1,8 +1,8 @@
+using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core.CustomTypeProviders;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
 using Newtonsoft.Json;
 using TcfOss.Filtering.Contracts.Newtonsoft;
 using TcfOss.Filtering.EntityFrameworkCore.Queryable;
@@ -10,6 +10,7 @@ using TcfOss.Filtering.Linq.FilterMapping;
 using TcfOss.Filtering.Linq.IntegrationTests.Database;
 using TcfOss.Filtering.Linq.IntegrationTests.Database.Entities;
 using TcfOss.Filtering.XlsxOutput;
+
 using STJ = System.Text.Json;
 
 namespace TcfOss.Filtering.Linq.IntegrationTests.MySql;

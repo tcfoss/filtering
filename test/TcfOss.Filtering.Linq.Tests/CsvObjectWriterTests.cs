@@ -324,9 +324,9 @@ public class CsvObjectWriterTests
         }
 
         string[] lines = Lines(ReadAll(stream));
-    Assert.Equal("Name,UpdatedAt,Anniversary,IsActive,Amount,IsArchived,Metadata,NullMetadata", lines[0]);
-    Assert.Equal("Alice,2026-07-14 09:30:00,2026-07-01,True,1234.56,False,custom,N/A", lines[1]);
-    Assert.Equal("Bob,N/A,N/A,N/A,N/A,N/A,N/A,N/A", lines[2]);
+        Assert.Equal("Name,UpdatedAt,Anniversary,IsActive,Amount,IsArchived,Metadata,NullMetadata", lines[0]);
+        Assert.Equal("Alice,2026-07-14 09:30:00,2026-07-01,True,1234.56,False,custom,N/A", lines[1]);
+        Assert.Equal("Bob,N/A,N/A,N/A,N/A,N/A,N/A,N/A", lines[2]);
     }
 
     // -------------------------------------------------------------------------
