@@ -28,6 +28,17 @@ public class ContractFilterTests
         Assert.Equal(Contracts.FilterTypes.Composite, filter.FilterType);
     }
 
+    [Fact]
+    public void SetFilter_FilterType()
+    {
+        var filter = new Contracts.SetFilter
+        {
+            Field = "Tags",
+            Values = ["Value1", "Value2"]
+        };
+        Assert.Equal(Contracts.FilterTypes.Set, filter.FilterType);
+    }
+
     // -------------------------------------------------------------------------
     // Shared JSON test data
     // -------------------------------------------------------------------------

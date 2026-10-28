@@ -1,3 +1,4 @@
+using System.Globalization;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using TcfOss.Filtering.XlsxOutput;
@@ -9,6 +10,17 @@ public class ExcelWriterTests
     private sealed class IndexLike
     {
         public override string ToString() => "0";
+    }
+
+    private sealed class NullFormattable : IFormattable
+    {
+        public string ToString(string? format, IFormatProvider? formatProvider) => null!;
+        public override string ToString() => null!;
+    }
+
+    private sealed class NullTextValue
+    {
+        public override string ToString() => null!;
     }
 
     private sealed class TestableExcelWriter(Stream stream, SerializationOptions options) : ExcelWriter(stream, options)
@@ -72,7 +84,7 @@ public class ExcelWriterTests
         using MemoryStream stream = new();
         var writer = new ExcelWriter(stream, new SerializationOptions());
 
-        writer.WriteRow(["repeat", 123, true, dateTime, dateOnly, new IndexLike()]);
+        writer.WriteRow(["repeat", 123, true, dateTime, dateOnly, new IndexLike(), false]);
         writer.WriteRow(["repeat"]);
         writer.Close();
 
@@ -94,15 +106,58 @@ public class ExcelWriterTests
         Assert.Equal("1", firstRow[2].CellValue?.Text);
 
         Assert.Equal((uint)3, firstRow[3].StyleIndex?.Value);
-        Assert.Equal(dateTime.ToOADate().ToString(System.Globalization.CultureInfo.InvariantCulture), firstRow[3].CellValue?.Text);
+        Assert.Equal(dateTime.ToOADate().ToString(CultureInfo.InvariantCulture), firstRow[3].CellValue?.Text);
 
         Assert.Equal((uint)2, firstRow[4].StyleIndex?.Value);
-        Assert.Equal(dateOnly.ToDateTime(TimeOnly.MinValue).ToOADate().ToString(System.Globalization.CultureInfo.InvariantCulture), firstRow[4].CellValue?.Text);
+        Assert.Equal(dateOnly.ToDateTime(TimeOnly.MinValue).ToOADate().ToString(CultureInfo.InvariantCulture), firstRow[4].CellValue?.Text);
 
         Assert.Equal(CellValues.SharedString, firstRow[5].DataType?.Value);
-        Assert.Equal("0", firstRow[5].CellValue?.Text);
+        Assert.Equal("0", sharedStrings[int.Parse(firstRow[5].CellValue!.Text)]);
+
+        Assert.Equal(CellValues.Boolean, firstRow[6].DataType?.Value);
+        Assert.Equal("0", firstRow[6].CellValue?.Text);
 
         Assert.Equal(firstRow[0].CellValue?.Text, secondRow[0].CellValue?.Text);
+    }
+
+    [Fact]
+    public void WriteRow_DecimalUsesInvariantCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            using MemoryStream stream = new();
+            var writer = new ExcelWriter(stream, new SerializationOptions());
+            writer.WriteRow([19.99m]);
+            writer.Close();
+
+            stream.Position = 0;
+            using SpreadsheetDocument doc = SpreadsheetDocument.Open(stream, false);
+            Cell cell = GetCells(doc.WorkbookPart!, worksheetIndex: 0, rowIndex: 1)[0];
+
+            Assert.Equal("19.99", cell.CellValue?.Text);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [Fact]
+    public void WriteRow_NullCustomFormatting_UsesBlankValue()
+    {
+        using MemoryStream stream = new();
+        var writer = new TestableExcelWriter(stream, new SerializationOptions { BlankValue = "N/A" });
+        writer.WriteRow([new NullFormattable(), new NullTextValue()]);
+        writer.Close();
+
+        stream.Position = 0;
+        using SpreadsheetDocument doc = SpreadsheetDocument.Open(stream, false);
+        string[] sharedStrings = GetSharedStrings(doc.WorkbookPart!);
+        List<Cell> cells = GetCells(doc.WorkbookPart!, worksheetIndex: 0, rowIndex: 1);
+
+        Assert.All(cells, cell => Assert.Equal("N/A", sharedStrings[int.Parse(cell.CellValue!.Text)]));
     }
 
     [Fact]

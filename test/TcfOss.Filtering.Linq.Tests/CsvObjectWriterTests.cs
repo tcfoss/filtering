@@ -25,6 +25,16 @@ public class CsvObjectWriterTests
         string Name,
         DateOnly Date,
         bool IsEnabled);
+
+    private sealed class TextValue
+    {
+        public override string ToString() => "custom";
+    }
+
+    private sealed class NullTextValue
+    {
+        public override string ToString() => null!;
+    }
     // ReSharper restore NotAccessedPositionalProperty.Local
 
     private static string Write(Action<CsvObjectWriter<Row>> action, string blankValue = "", bool writeHeaders = false)
@@ -255,6 +265,40 @@ public class CsvObjectWriterTests
     }
 
     [Fact]
+    public void WriteObject_NullableTypedProperties_WhenSet_UsesInvariantFormats()
+    {
+        var row = new NullableRow(
+            new DateTime(2026, 7, 14, 9, 30, 0),
+            new DateOnly(2026, 7, 1),
+            true,
+            42,
+            "note");
+
+        var options = new SerializationOptions { IncludeHeaders = false };
+        using MemoryStream stream = new();
+        using (CsvObjectWriter<NullableRow> writer = new(stream, options))
+        {
+            writer.WriteObject(row);
+        }
+
+        Assert.Equal("2026-07-14 09:30:00,2026-07-01,True,42,note", Lines(ReadAll(stream))[0]);
+    }
+
+    [Fact]
+    public void CsvWriter_Dispose_IsIdempotentAndLeavesStreamOpen()
+    {
+        using MemoryStream stream = new();
+        var writer = new CsvWriter(stream, new SerializationOptions());
+
+        writer.WriteRow(["value"]);
+        writer.Dispose();
+        writer.Dispose();
+
+        Assert.True(stream.CanRead);
+        Assert.Equal("value", Lines(ReadAll(stream))[0]);
+    }
+
+    [Fact]
     public void WritesDynamicResults_TypedValues_AndMissingKeys_AreFormattedOrBlank()
     {
         IDictionary<string, object?> row1 = new System.Dynamic.ExpandoObject();
@@ -263,6 +307,9 @@ public class CsvObjectWriterTests
         row1["Anniversary"] = new DateOnly(2026, 7, 1);
         row1["IsActive"] = true;
         row1["Amount"] = 1234.56m;
+        row1["IsArchived"] = false;
+        row1["Metadata"] = new TextValue();
+        row1["NullMetadata"] = new NullTextValue();
 
         IDictionary<string, object?> row2 = new System.Dynamic.ExpandoObject();
         row2["Name"] = "Bob";
@@ -277,9 +324,9 @@ public class CsvObjectWriterTests
         }
 
         string[] lines = Lines(ReadAll(stream));
-        Assert.Equal("Name,UpdatedAt,Anniversary,IsActive,Amount", lines[0]);
-        Assert.Equal("Alice,2026-07-14 09:30:00,2026-07-01,True,1234.56", lines[1]);
-        Assert.Equal("Bob,N/A,N/A,N/A,N/A", lines[2]);
+        Assert.Equal("Name,UpdatedAt,Anniversary,IsActive,Amount,IsArchived,Metadata,NullMetadata", lines[0]);
+        Assert.Equal("Alice,2026-07-14 09:30:00,2026-07-01,True,1234.56,False,custom,N/A", lines[1]);
+        Assert.Equal("Bob,N/A,N/A,N/A,N/A,N/A,N/A,N/A", lines[2]);
     }
 
     // -------------------------------------------------------------------------
@@ -348,6 +395,35 @@ public class CsvObjectWriterTests
 
         using Stream returned = rows.AsQueryable().ToCsvStream();
         Assert.Equal(3, Lines(ReadAll(returned)).Length);
+    }
+
+    [Fact]
+    public void ToCsvStream_OptionFallbackOverloads_WriteExpectedRows()
+    {
+        Row[] rows =
+        [new("Alice", 30, 0m, true, new DateTime(2024, 1, 1), new DateOnly(2000, 1, 1), null)];
+
+        using MemoryStream providedWithOptions = new();
+        rows.AsQueryable().ToCsvStream(providedWithOptions, new SerializationOptions { IncludeHeaders = false });
+        Assert.Single(Lines(ReadAll(providedWithOptions)));
+
+        using Stream returnedWithNullOptions = rows.AsQueryable().ToCsvStream(
+            filter: null,
+            sorts: null,
+            maxRows: null,
+            System.Linq.Dynamic.Core.ParsingConfig.Default,
+            options: null);
+        Assert.Equal(2, Lines(ReadAll(returnedWithNullOptions)).Length);
+
+        using MemoryStream providedWithNullOptions = new();
+        rows.AsQueryable().ToCsvStream(
+            providedWithNullOptions,
+            filter: null,
+            sorts: null,
+            maxRows: null,
+            System.Linq.Dynamic.Core.ParsingConfig.Default,
+            options: null);
+        Assert.Equal(2, Lines(ReadAll(providedWithNullOptions)).Length);
     }
 
     [Fact]

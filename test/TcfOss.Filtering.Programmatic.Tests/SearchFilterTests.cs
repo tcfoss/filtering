@@ -132,4 +132,27 @@ public class SearchFilterTests
         SimpleFilter simple = Assert.IsType<SimpleFilter>(result);
         Assert.Equal(FilterOperators.IsNull, simple.Operator);
     }
+
+    [Fact]
+    public void ToContractFilter_EmptyTypeRangeWithoutNullOption_ReturnsNull()
+    {
+        var filter = new SearchFilter<IntTypeRange>("Age") { Value = new IntTypeRange() };
+
+        Filter? result = filter.ToContractFilter(new MappingOptions());
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void ToContractFilter_NonemptyTypeRangeWithNullOption_RemainsRange()
+    {
+        var filter = new SearchFilter<IntTypeRange>("Age") { Value = new IntTypeRange { Min = 10 } };
+        MappingOptions options = new() { NullValueToIsNullFilter = true };
+
+        Filter? result = filter.ToContractFilter(options);
+
+        SimpleFilter simple = Assert.IsType<SimpleFilter>(result);
+        Assert.Equal(FilterOperators.GreaterThanOrEqualTo, simple.Operator);
+        Assert.Equal("10", simple.Value);
+    }
 }

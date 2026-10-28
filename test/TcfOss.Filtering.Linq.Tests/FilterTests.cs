@@ -69,6 +69,20 @@ public class FilterTests
     }
 
     [Fact]
+    public void LikeOperator_WithCustomProviderMissingLikeTypes_ThrowsClearException()
+    {
+        var filter = new SimpleFilter("Name", QueryOperator.Like, "%ohn%");
+        var valueManager = new ValueManager();
+        var parsingConfig = new System.Linq.Dynamic.Core.ParsingConfig();
+        parsingConfig.CustomTypeProvider = new System.Linq.Dynamic.Core.CustomTypeProviders.DefaultDynamicLinqCustomTypeProvider(parsingConfig);
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            TestData.People.AsQueryable().ApplyFiltering(filter, valueManager, parsingConfig).ToList());
+
+        Assert.Contains("registers EF and DbFunctionsExtensions", ex.Message);
+    }
+
+    [Fact]
     public void CompositeFilter_ToDynamicLinq()
     {
         var valueManager = new ValueManager();
@@ -133,6 +147,22 @@ public class FilterTests
         ConstantExpression actualValue = Assert.Single(actualValues);
         ConstantExpression constant = Assert.IsType<ConstantExpression>(actualValue);
         Assert.Equal("J", constant.Value);
+    }
+
+    [Fact]
+    public void QuantifiedFilter_NegatedNullable_ToDynamicLinq()
+    {
+        var valueManager = new ValueManager();
+        var subFilter = new SimpleFilter("Name", QueryOperator.EqualTo, "Alice");
+        var filter = new QuantifiedFilter("Friends", subFilter, QuantifiedOperator.Any)
+        {
+            IsNullable = true,
+            IsNegated = true
+        };
+
+        string result = filter.ToDynamicLinq(valueManager);
+
+        Assert.Equal("!(Friends != null and Friends.Any(Name == @0))", result);
     }
 
     [Fact]
@@ -247,6 +277,32 @@ public class FilterTests
         string result = filter.ToDynamicLinq(valueManager);
 
         Assert.Equal("!(@0.Contains(Name))", result);
+    }
+
+    [Fact]
+    public void SetFilter_WithElementType_ToDynamicLinq()
+    {
+        var valueManager = new ValueManager();
+        var filter = new SetFilter("Age", [25, 30], elementType: typeof(int));
+
+        string result = filter.ToDynamicLinq(valueManager);
+
+        Assert.Equal("@0.Contains(Age)", result);
+        Assert.Equal(new[] { 25, 30 }, Assert.IsType<int[]>(valueManager.GetValueExpressions()[0].Value));
+    }
+
+    [Fact]
+    public void SetFilter_EmptyValues_MatchesNoRows()
+    {
+        var filter = new SetFilter("Name", []);
+        var valueManager = new ValueManager();
+
+        var result = TestData.People
+            .AsQueryable()
+            .ApplyFiltering(filter, valueManager)
+            .ToList();
+
+        Assert.Empty(result);
     }
 
     [Fact]

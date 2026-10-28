@@ -170,6 +170,7 @@ public class BasicFilterMapperTests
         var dto = new FakeFilter();
         UnknownFilterTypeException ex = Assert.Throws<UnknownFilterTypeException>(() => _mapper.ToFilter(dto));
         Assert.Contains("mock", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("mock", ex.Type);
     }
 
     [Theory]
@@ -354,6 +355,20 @@ public class BasicFilterMapperTests
         Assert.Empty(result.Sorts);
         Assert.Equal(1, result.Page);
         Assert.Equal(25, result.PageSize);
+    }
+
+    [Fact]
+    public void DynamicDataFilter_EmptyRequestedFields_Throws()
+    {
+        var dto = new Contracts.DynamicDataRequest
+        {
+            RequestedFields = [],
+            Sorts = [],
+            Page = 1,
+            PageSize = 25,
+        };
+
+        Assert.Throws<EmptyRequestedFieldsException>(() => _mapper.ToDataRequest(dto));
     }
 
     // -------------------------------------------------------------------------

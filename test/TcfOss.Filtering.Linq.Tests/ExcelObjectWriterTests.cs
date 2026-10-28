@@ -15,6 +15,8 @@ public class ExcelObjectWriterTests
         DateTime CreatedAt,
         DateOnly BirthDate,
         string? Notes);
+
+    private record OptionalRow(int? Number, bool? Enabled, DateTime? CreatedAt, DateOnly? BirthDate, object? Metadata);
     // ReSharper restore NotAccessedPositionalProperty.Local
 
     private static readonly TestRow[] s_rows =
@@ -126,6 +128,37 @@ public class ExcelObjectWriterTests
     }
 
     [Fact]
+    public void WriteObject_NullableAndFallbackProperties_WritesValuesAndBlanks()
+    {
+        OptionalRow[] rows =
+        [
+            new(null, null, null, null, null),
+            new(42, true, new DateTime(2024, 3, 4, 5, 6, 0), new DateOnly(2024, 3, 4), "details")
+        ];
+
+        using Stream content = Write(rows.AsQueryable(), new SerializationOptions { BlankValue = "N/A", IncludeHeaders = false });
+        (_, List<List<string>> data) = ReadWrittenData(content, hasHeaders: false);
+
+        Assert.Equal(["N/A", "N/A", "N/A", "N/A", "N/A"], data[0]);
+        Assert.Equal("42", data[1][0]);
+        Assert.Equal("1", data[1][1]);
+        Assert.Equal(new DateTime(2024, 3, 4, 5, 6, 0).ToOADate().ToString(System.Globalization.CultureInfo.InvariantCulture), data[1][2]);
+        Assert.Equal(new DateOnly(2024, 3, 4).ToDateTime(TimeOnly.MinValue).ToOADate().ToString(System.Globalization.CultureInfo.InvariantCulture), data[1][3]);
+        Assert.Equal("details", data[1][4]);
+    }
+
+    [Fact]
+    public void WriteObject_RuntimeObject_UsesRuntimeProperties()
+    {
+        object[] rows = [new { Name = "Alice", Age = 30 }];
+
+        using Stream content = Write(rows.AsQueryable());
+        (_, List<List<string>> data) = ReadWrittenData(content, hasHeaders: false);
+
+        Assert.Equal(["Alice", "30"], Assert.Single(data));
+    }
+
+    [Fact]
     public void WriteObject_MultipleRows_AllPresent()
     {
         using Stream content = Write(s_rows.AsQueryable());
@@ -173,6 +206,28 @@ public class ExcelObjectWriterTests
 
         List<string> singleRow = Assert.Single(data);
         Assert.Equal("Alice", singleRow[0]); // first row is data, not a header
+    }
+
+    [Fact]
+    public void WriterGuards_ClosedWriterAndNullObject_Throw()
+    {
+        using MemoryStream headersStream = new();
+        using (ExcelObjectWriter<TestRow> writer = new(headersStream, new SerializationOptions { IncludeHeaders = true }))
+        {
+            writer.Close();
+            Assert.Throws<InvalidOperationException>(writer.WriteHeaders);
+        }
+
+        using MemoryStream objectStream = new();
+        using (ExcelObjectWriter<TestRow> writer = new(objectStream, new SerializationOptions { IncludeHeaders = false }))
+        {
+            writer.Close();
+            Assert.Throws<InvalidOperationException>(() => writer.WriteObject(s_rows[0]));
+        }
+
+        using MemoryStream nullStream = new();
+        using ExcelObjectWriter<TestRow> openWriter = new(nullStream, new SerializationOptions { IncludeHeaders = false });
+        Assert.Throws<ArgumentNullException>(() => openWriter.WriteObject(null!));
     }
 
     // -------------------------------------------------------------------------
@@ -296,6 +351,30 @@ public class ExcelObjectWriterTests
         Assert.Equal("30", singleRow[2]);
     }
 
+    [Fact]
+    public void WritesDynamicResults_MissingLaterDictionaryKey_UsesBlankValue()
+    {
+        IDictionary<string, object?> first = new System.Dynamic.ExpandoObject();
+        first["Name"] = "Alice";
+        first["Age"] = 30;
+        IDictionary<string, object?> second = new System.Dynamic.ExpandoObject();
+        second["Name"] = "Bob";
+
+        using MemoryStream stream = new();
+        using (ExcelObjectWriter<dynamic> writer = new(stream, new SerializationOptions { IncludeHeaders = true, BlankValue = "N/A" }))
+        {
+            writer.WriteHeaders();
+            writer.WriteObject(first);
+            writer.WriteObject(second);
+        }
+        stream.Position = 0;
+
+        (List<string>? headers, List<List<string>> data) = ReadWrittenData(stream, hasHeaders: true);
+
+        Assert.Equal(["Name", "Age"], headers);
+        Assert.Equal(["Bob", "N/A"], data[1]);
+    }
+
     // -------------------------------------------------------------------------
     // Async streaming
     // -------------------------------------------------------------------------
@@ -354,6 +433,25 @@ public class ExcelObjectWriterTests
 
         Assert.Throws<ArgumentNullException>(() =>
             query.ToExcelStream(new MemoryStream(), null, null, null, new ValueManager(), System.Linq.Dynamic.Core.ParsingConfig.Default, null!));
+    }
+
+    [Fact]
+    public void ToExcelStream_OptionFallbackOverloads_WriteExpectedRows()
+    {
+        using MemoryStream providedWithNullOptions = new();
+        s_rows.Take(1).AsQueryable().ToExcelStream(providedWithNullOptions, options: null);
+        providedWithNullOptions.Position = 0;
+        (_, List<List<string>> providedData) = ReadWrittenData(providedWithNullOptions, hasHeaders: true);
+        Assert.Single(providedData);
+
+        using Stream returnedWithNullOptions = s_rows.Take(1).AsQueryable().ToExcelStream(
+            filter: null,
+            sorts: null,
+            maxRows: null,
+            System.Linq.Dynamic.Core.ParsingConfig.Default,
+            options: null);
+        (_, List<List<string>> returnedData) = ReadWrittenData(returnedWithNullOptions, hasHeaders: true);
+        Assert.Single(returnedData);
     }
 
     [Fact]

@@ -205,9 +205,13 @@ public class ExcelWriter : IDisposable
         {
             WriteCellDateOnly(dateOnlyValue);
         }
-        else
+        else if (value is int or uint or long or ulong or short or ushort or byte or sbyte or float or double or decimal)
         {
             WriteCellOther(value);
+        }
+        else
+        {
+            WriteCellString(value.ToString() ?? _options.BlankValue);
         }
 
         _writer.WriteEndElement(); // Cell
@@ -231,7 +235,10 @@ public class ExcelWriter : IDisposable
 
     protected void WriteCellOther(object value)
     {
-        _writer!.WriteElement(new CellValue(value.ToString() ?? _options.BlankValue));
+        string text = value is IFormattable formattable
+            ? formattable.ToString(null, CultureInfo.InvariantCulture)
+            : value.ToString() ?? _options.BlankValue;
+        _writer!.WriteElement(new CellValue(text));
     }
 
     private static OpenXmlAttribute[] GetAttributesForValue(object value)
