@@ -5,6 +5,29 @@ namespace TcfOss.Filtering.Programmatic.Tests;
 
 public class SearchFilterTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("Alice")]
+    public void Constructor_WithValue_PreservesFieldAndValue(string? value)
+    {
+        var filter = new SearchFilter<string>("Name", value);
+
+        Assert.Equal("Name", filter.Field);
+        Assert.Equal(value, filter.Value);
+        Filter? result = filter.ToContractFilter(new MappingOptions());
+        if (value is null)
+        {
+            Assert.Null(result);
+        }
+        else
+        {
+            SimpleFilter simple = Assert.IsType<SimpleFilter>(result);
+            Assert.Equal("Name", simple.Field);
+            Assert.Equal(FilterOperators.EqualTo, simple.Operator);
+            Assert.Equal(value, simple.Value);
+        }
+    }
+
     [Fact]
     public void ToContractFilter_NullValueWithoutNullOption_ReturnsNull()
     {
